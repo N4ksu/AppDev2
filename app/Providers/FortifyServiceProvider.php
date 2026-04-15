@@ -38,6 +38,29 @@ class FortifyServiceProvider extends ServiceProvider
     {
         Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
         Fortify::createUsersUsing(CreateNewUser::class);
+
+        Fortify::authenticateUsing(function (Request $request) {
+            $user = \App\Models\User::where('email', $request->email)->first();
+
+            if ($user && $user->is_locked) {
+                if ($user->locked_until && now()->lessThan($user->locked_until)) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'email' => 'Your account has been locked due to multiple failed login attempts.',
+                    ]);
+                } else {
+                    $user->is_locked = false;
+                    $user->failed_attempts = 0;
+                    $user->locked_until = null;
+                    $user->save();
+                }
+            }
+
+            if ($user && \Illuminate\Support\Facades\Hash::check($request->password, $user->password)) {
+                return $user;
+            }
+
+            return false;
+        });
     }
 
     /**
