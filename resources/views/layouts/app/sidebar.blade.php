@@ -20,6 +20,18 @@
                         {{ __('Security Logs') }}
                     </flux:sidebar.item>
                 </flux:sidebar.group>
+
+                @if(auth()->user()->role === 'admin')
+                    <flux:sidebar.group :heading="__('Security Administration')" class="mt-4 grid">
+                        <flux:sidebar.item icon="wrench-screwdriver" :href="route('admin.security-settings')" :current="request()->routeIs('admin.security-settings')" wire:navigate>
+                            {{ __('Lock Settings') }}
+                        </flux:sidebar.item>
+
+                        <flux:sidebar.item icon="user-minus" :href="route('admin.account-unlocks')" :current="request()->routeIs('admin.account-unlocks')" wire:navigate>
+                            {{ __('Locked Accounts') }}
+                        </flux:sidebar.item>
+                    </flux:sidebar.group>
+                @endif
             </flux:sidebar.nav>
 
             <flux:spacer />
@@ -89,6 +101,10 @@
                 <flux:toast />
             </flux:toast.group>
         @endpersist
+
+        @if(auth()->user()?->role === 'admin')
+            @livewire('pages::admin.security-alert-monitor')
+        @endif
 
         @fluxScripts
     </body>

@@ -8,6 +8,10 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
+// NOTE: RecordFailedLogin and RecordSuccessfulLogin are registered automatically
+// by Laravel's event auto-discovery via their type-hinted handle() methods.
+// Do NOT add manual Event::listen() calls here — that causes duplicate log entries.
+
 class AppServiceProvider extends ServiceProvider
 {
     /**
@@ -24,16 +28,6 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
-
-        \Illuminate\Support\Facades\Event::listen(
-            \Illuminate\Auth\Events\Failed::class,
-            \App\Listeners\RecordFailedLogin::class
-        );
-
-        \Illuminate\Support\Facades\Event::listen(
-            \Illuminate\Auth\Events\Login::class,
-            \App\Listeners\RecordSuccessfulLogin::class
-        );
     }
 
     /**

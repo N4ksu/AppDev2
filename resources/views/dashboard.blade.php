@@ -7,33 +7,41 @@
             <div class="flex flex-col rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-zinc-900">
                 <div class="flex items-center gap-2">
                     <flux:icon.check-circle class="size-5 text-emerald-500" />
-                    <h3 class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Successful Logins</h3>
+                    <h3 class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Your Successful Logins</h3>
                 </div>
-                <p class="mt-2 text-3xl font-bold text-zinc-900 dark:text-white">{{ $metrics['successful_logins'] }}</p>
+                <p class="mt-2 text-3xl font-bold text-zinc-900 dark:text-white">{{ $metrics['my_successful_logins'] }}</p>
             </div>
 
             <div class="flex flex-col rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-zinc-900">
                 <div class="flex items-center gap-2">
                     <flux:icon.x-circle class="size-5 text-red-500" />
-                    <h3 class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Failed Attempts</h3>
+                    <h3 class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Your Failed Attempts</h3>
                 </div>
-                <p class="mt-2 text-3xl font-bold text-zinc-900 dark:text-white">{{ $metrics['failed_logins'] }}</p>
+                <p class="mt-2 text-3xl font-bold text-zinc-900 dark:text-white">{{ $metrics['my_failed_logins'] }}</p>
             </div>
 
             <div class="flex flex-col rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-zinc-900">
                 <div class="flex items-center gap-2">
                     <flux:icon.lock-closed class="size-5 text-orange-500" />
-                    <h3 class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Locked Accounts</h3>
+                    <h3 class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Account Status</h3>
                 </div>
-                <p class="mt-2 text-3xl font-bold text-zinc-900 dark:text-white">{{ $metrics['locked_accounts'] }}</p>
+                <p class="mt-2 text-xl font-bold">
+                    @if($metrics['user_is_locked'])
+                        <span class="text-red-500 dark:text-red-400 italic">Locked</span>
+                    @elseif(auth()->user()->failed_attempts > 0)
+                        <span class="text-orange-500 dark:text-orange-400 italic">Warning</span>
+                    @else
+                        <span class="text-emerald-500 dark:text-emerald-400">Secure</span>
+                    @endif
+                </p>
             </div>
 
             <div class="flex flex-col rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-zinc-900">
                 <div class="flex items-center gap-2">
                     <flux:icon.document-text class="size-5 text-indigo-500" />
-                    <h3 class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Total Audit Logs</h3>
+                    <h3 class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Your Total Sessions</h3>
                 </div>
-                <p class="mt-2 text-3xl font-bold text-zinc-900 dark:text-white">{{ $metrics['total_logs'] }}</p>
+                <p class="mt-2 text-3xl font-bold text-zinc-900 dark:text-white">{{ $metrics['my_total_sessions'] }}</p>
             </div>
             
         </div>
@@ -87,7 +95,7 @@
                     <div class="flex flex-col gap-3">
                         <div class="flex justify-between items-center pb-3 border-b border-neutral-200 dark:border-neutral-700">
                             <span class="text-sm text-zinc-500 dark:text-zinc-400">Account Lock Status</span>
-                            @if(auth()->user()->is_locked)
+                            @if($metrics['user_is_locked'])
                                 <span class="text-sm font-semibold text-red-600 dark:text-red-400">Locked</span>
                             @else
                                 <span class="text-sm font-semibold text-emerald-600 dark:text-emerald-400">Secure</span>
@@ -101,7 +109,7 @@
                         </div>
                         <div class="flex justify-between items-center">
                             <span class="text-sm text-zinc-500 dark:text-zinc-400">Member Since</span>
-                            <span class="text-sm font-medium text-zinc-900 dark:text-white">{{ auth()->user()->created_at->format('M Y') }}</span>
+                            <span class="text-sm font-medium text-zinc-900 dark:text-white">{{ auth()->user()->created_at->format('M d, Y') }}</span>
                         </div>
                     </div>
                 </div>

@@ -10,15 +10,18 @@ class RecordSuccessfulLogin
 {
     public function handle(Login $event): void
     {
+        /** @var User $user */
+        $user = $event->user;
+
         LoginLog::create([
-            'user_id' => $event->user?->getAuthIdentifier(),
+            'user_id' => $user->getAuthIdentifier(),
+            'email' => $user->email,
             'ip_address' => request()->ip(),
             'status' => 'success'
         ]);
 
-        if ($event->user) {
-            $user = User::find($event->user->getAuthIdentifier());
-            if ($user && ($user->failed_attempts > 0 || $user->is_locked)) {
+        if ($user) {
+            if ($user->failed_attempts > 0 || $user->is_locked) {
                 $user->failed_attempts = 0;
                 $user->is_locked = false;
                 $user->locked_until = null;
