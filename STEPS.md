@@ -129,14 +129,24 @@ php artisan migrate
 **Why do we need to do this?** 
 Right now, the database is completely empty. Running `migrate` tells Laravel to execute all the blueprint files located in the `database/migrations/` folder. This automatically creates the structured `users`, `sessions`, and `login_logs` tables in your SQLite database so the app can start storing real data.
 
-### Step 6: Install Frontend Dependencies
+### Step 6: Initialize Application Data (Seeding)
+```bash
+php artisan db:seed
+```
+**Why do we need to do this?** 
+Even after creating the tables, the app needs initial data to work. This command runs the `database/seeders/` files which:
+1. Creates the **Default Admin Account** so you can log in immediately.
+2. Initializes the **Security Settings** (Max attempts, lock duration) in the database.
+Without this step, you won't be able to log in or adjust security settings.
+
+### Step 7: Install Frontend Dependencies
 ```bash
 npm install
 ```
 **Why do we need to do this?** 
 Just like `composer install` downloads backend PHP packages, `npm install` reads the `package.json` file and downloads all the frontend CSS and JavaScript packages (like Tailwind CSS) into a new `node_modules/` folder.
 
-### Step 7: Run the Application!
+### Step 8: Run the Application!
 You need two terminals running simultaneously.
 
 **Terminal 1 (Backend - PHP):**
@@ -145,23 +155,24 @@ php artisan serve
 ```
 **Why do we do this?** PHP is a server technology. `artisan serve` boots up a tiny, built-in local web server on your computer acting as the backend engine, listening for requests on `http://localhost:8000`.
 
-**Terminal 2 (Frontend - Open in a new tab):**
+**Terminal 2 (Frontend - Build & Hot Refresh):**
 ```bash
 npm run dev
 ```
 
 **Why do we need to run this?** 
-Modern Laravel projects don't just use plain traditional CSS; they use advanced tools like **Tailwind CSS** (for beautiful styling elements) and **Vite** (a lightning-fast frontend build tool) to optimize the website. 
+This starts **Vite**, which handles your Tailwind CSS and interactive UI components. Whenever you save a file in VS Code, Vite instantly updates the browser so you can see your changes in real-time.
 
-When you type `npm run dev`, you are booting up the Vite development tool. Here is exactly what your terminal output means:
-- `VITE ready`: The Vite engine has successfully started.
-- `Local: http://localhost:5173/`: This is Vite's hidden internal server running in the background. *(Note: You do NOT open this link directly!)*
-- `LARAVEL plugin`: This confirms Vite has paired perfectly with your Laravel backend.
+---
 
-**What is it actively doing?**
-It acts as a live "Watcher". It sits open in your terminal and watches all your `.blade.php`, `.css`, and `.js` files. The very millisecond you save a code change in VS Code, Vite instantly updates your browser without you even having to hit refresh! 
+## Development Workflow: How to Modify Code
+If you want to modify the system or add new features, follow this workflow:
 
-**What happens if I DON'T run it?**
-If you only run the PHP backend (`php artisan serve`) but forget to run `npm run dev` in a second terminal, your Laravel backend will still work, but it won't be able to process the Tailwind CSS. Your website will load as completely unstyled, broken black-and-white text!
+1. **Always keep `npm run dev` running**: This ensures your CSS changes are compiled instantly.
+2. **Modify Blade Views**: Most UI changes are in `resources/views/pages/`.
+3. **Modify Logic**: Backend security logic is located in:
+   - `app/Listeners/RecordFailedLogin.php` (Failed attempts/Locking logic)
+   - `app/Http/Middleware/EnsureAccountNotLocked.php` (Lock enforcement)
+4. **Database Changes**: If you need new columns, create a new migration (`php artisan make:migration ...`) and run `php artisan migrate`.
 
-The application is now fully running. Open your browser and visit: `http://localhost:8000` *(You connect to the Laravel server, and Laravel automatically talks to Vite behind the scenes!)*
+The application is now fully running and ready for development. Visit: `http://localhost:8000`
