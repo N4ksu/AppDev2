@@ -1,6 +1,16 @@
 <x-layouts::auth :title="__('Register')">
     <div class="flex flex-col gap-6">
-        <x-auth-header :title="__('Create an account')" :description="__('Enter your details below to create your account')" />
+        <div class="flex flex-col items-center gap-2 text-center">
+            <div class="flex items-center justify-center p-3 rounded-full bg-zinc-500/10 text-zinc-600 dark:text-zinc-400">
+                <flux:icon.shield-check variant="solid" class="size-8" />
+            </div>
+            <h1 class="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">
+                Register Secure Account
+            </h1>
+            <p class="text-sm text-zinc-600 dark:text-zinc-400">
+                Enter your details below to create an audited account.
+            </p>
+        </div>
 
         <!-- Session Status -->
         <x-auth-session-status class="text-center" :status="session('status')" />

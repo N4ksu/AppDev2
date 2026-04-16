@@ -1,6 +1,17 @@
 <x-layouts::auth :title="__('Log in')">
     <div class="flex flex-col gap-6">
-        <x-auth-header :title="__('Log in to your account')" :description="__('Enter your email and password below to log in')" />
+        <div class="flex flex-col items-center gap-2 text-center">
+            <div class="flex items-center justify-center p-3 rounded-full bg-red-500/10 text-red-600 dark:text-red-400">
+                <flux:icon.shield-exclamation variant="solid" class="size-8" />
+            </div>
+            <h1 class="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">
+                Secure Account Access
+            </h1>
+            <p class="text-sm text-zinc-600 dark:text-zinc-400">
+                Login activity is monitored for account protection. <br>
+                <span class="text-red-600 dark:text-red-400">Multiple failed attempts may temporarily lock your account.</span>
+            </p>
+        </div>
 
         <!-- Session Status -->
         <x-auth-session-status class="text-center" :status="session('status')" />

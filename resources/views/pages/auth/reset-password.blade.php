@@ -1,6 +1,16 @@
 <x-layouts::auth :title="__('Reset password')">
     <div class="flex flex-col gap-6">
-        <x-auth-header :title="__('Reset password')" :description="__('Please enter your new password below')" />
+        <div class="flex flex-col items-center gap-2 text-center">
+            <div class="flex items-center justify-center p-3 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                <flux:icon.shield-check variant="solid" class="size-8" />
+            </div>
+            <h1 class="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">
+                Establish New Security Credentials
+            </h1>
+            <p class="text-sm text-zinc-600 dark:text-zinc-400">
+                Ensure your new password meets the system requirements for maximum protection.
+            </p>
+        </div>
 
         <!-- Session Status -->
         <x-auth-session-status class="text-center" :status="session('status')" />

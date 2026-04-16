@@ -80,7 +80,29 @@ new #[Title('Profile settings')] class extends Component {
 
     <flux:heading class="sr-only">{{ __('Profile settings') }}</flux:heading>
 
-    <x-pages::settings.layout :heading="__('Profile')" :subheading="__('Update your name and email address')">
+    <div class="mb-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-zinc-900 flex items-center gap-4">
+            <div class="p-2 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                <flux:icon.shield-check variant="solid" class="size-6" />
+            </div>
+            <div>
+                <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Account Protection</p>
+                <p class="text-sm font-bold text-zinc-900 dark:text-white">Active System Member</p>
+            </div>
+        </div>
+
+        <div class="rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-zinc-900 flex items-center gap-4">
+            <div class="p-2 rounded-lg {{ auth()->user()->failed_attempts > 0 ? 'bg-orange-500/10 text-orange-600' : 'bg-zinc-500/10 text-zinc-600' }} dark:text-zinc-400">
+                <flux:icon.exclamation-triangle variant="solid" class="size-6" />
+            </div>
+            <div>
+                <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Failed Login Attempts</p>
+                <p class="text-sm font-bold text-zinc-900 dark:text-white">{{ auth()->user()->failed_attempts }} Attempts Recorded</p>
+            </div>
+        </div>
+    </div>
+
+    <x-pages::settings.layout :heading="__('Identity Overview')" :subheading="__('Update your monitored account details and primary email address')">
         <form wire:submit="updateProfileInformation" class="my-6 w-full space-y-6">
             <flux:input wire:model="name" :label="__('Name')" type="text" required autofocus autocomplete="name" />
 
