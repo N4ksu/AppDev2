@@ -45,4 +45,14 @@ class User extends Authenticatable
             ->map(fn ($word) => Str::substr($word, 0, 1))
             ->implode('');
     }
+
+    public function incidents(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(SecurityIncident::class, 'affected_user_id');
+    }
+
+    public function resolvedIncidents(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(SecurityIncident::class, 'resolved_by');
+    }
 }

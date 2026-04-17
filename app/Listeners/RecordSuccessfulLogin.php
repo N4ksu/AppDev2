@@ -22,6 +22,12 @@ class RecordSuccessfulLogin
 
         if ($user) {
             if ($user->failed_attempts > 0 || $user->is_locked) {
+                // Change any open incident for this user to 'investigating' 
+                // because a successful login after failures is a key event.
+                \App\Models\SecurityIncident::where('affected_user_id', $user->id)
+                    ->where('status', 'open')
+                    ->update(['status' => 'investigating']);
+
                 $user->failed_attempts = 0;
                 $user->is_locked = false;
                 $user->locked_until = null;

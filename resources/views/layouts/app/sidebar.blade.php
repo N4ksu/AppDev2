@@ -13,16 +13,20 @@
             <flux:sidebar.nav>
                 <flux:sidebar.group :heading="__('System Monitoring')" class="grid">
                     <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
-                        {{ __('Security Dashboard') }}
+                        {{ auth()->user()->role === 'admin' ? __('Security Dashboard') : __('Dashboard') }}
                     </flux:sidebar.item>
 
                     <flux:sidebar.item icon="list-bullet" :href="route('security-logs')" :current="request()->routeIs('security-logs')" wire:navigate>
-                        {{ __('Security Logs') }}
+                        {{ auth()->user()->role === 'admin' ? __('Security Logs') : __('Your Activity Logs') }}
                     </flux:sidebar.item>
                 </flux:sidebar.group>
 
                 @if(auth()->user()->role === 'admin')
                     <flux:sidebar.group :heading="__('Security Administration')" class="mt-4 grid">
+                        <flux:sidebar.item icon="shield-exclamation" :href="route('admin.security-incidents')" :current="request()->routeIs('admin.security-incidents')" wire:navigate>
+                            {{ __('Security Incidents') }}
+                        </flux:sidebar.item>
+
                         <flux:sidebar.item icon="wrench-screwdriver" :href="route('admin.security-settings')" :current="request()->routeIs('admin.security-settings')" wire:navigate>
                             {{ __('Lock Settings') }}
                         </flux:sidebar.item>

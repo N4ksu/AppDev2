@@ -43,20 +43,24 @@ class RecordFailedLogin
             // Determine status for this log entry
             $status = ($alreadyLocked || $isLockingNow) ? 'locked' : 'failed';
 
-            LoginLog::create([
+            $log = LoginLog::create([
                 'user_id'    => $user->id,
                 'email'      => $user->email,
                 'ip_address' => request()->ip(),
                 'status'     => $status,
             ]);
+
+            app(\App\Services\SecurityIncidentService::class)->handle($log);
         } else {
             // Log failed attempts for non-existent users
-            LoginLog::create([
+            $log = LoginLog::create([
                 'user_id'    => null,
                 'email'      => $submittedEmail,
                 'ip_address' => request()->ip(),
                 'status'     => 'failed',
             ]);
+
+            app(\App\Services\SecurityIncidentService::class)->handle($log);
         }
     }
 }
