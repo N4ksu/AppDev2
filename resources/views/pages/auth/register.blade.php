@@ -8,7 +8,7 @@
                 Register Secure Account
             </h1>
             <p class="text-sm text-zinc-600 dark:text-zinc-400">
-                Enter your details below to create an audited account.
+                Enter your details below to create a monitored account.
             </p>
         </div>
 

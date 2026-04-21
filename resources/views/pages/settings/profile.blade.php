@@ -8,7 +8,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
-new #[Title('Profile settings')] class extends Component {
+new #[Title('Account Identity')] class extends Component {
     use ProfileValidationRules;
 
     public string $name = '';
@@ -78,7 +78,7 @@ new #[Title('Profile settings')] class extends Component {
 <section class="w-full">
     @include('partials.settings-heading')
 
-    <flux:heading class="sr-only">{{ __('Profile settings') }}</flux:heading>
+    <flux:heading class="sr-only">{{ __('Account Identity') }}</flux:heading>
 
     <div class="mb-8 grid grid-cols-1 md:grid-cols-2 gap-4">
         <div class="rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-zinc-900 flex items-center gap-4">

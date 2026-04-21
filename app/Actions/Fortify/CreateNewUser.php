@@ -24,10 +24,13 @@ class CreateNewUser implements CreatesNewUsers
             'password' => $this->passwordRules(),
         ])->validate();
 
+        $role = User::count() === 0 ? 'admin' : 'user';
+
         return User::create([
             'name' => $input['name'],
             'email' => $input['email'],
             'password' => $input['password'],
+            'role' => $role,
         ]);
     }
 }

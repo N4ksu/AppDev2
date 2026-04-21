@@ -24,6 +24,9 @@
                 <div class="flex items-center gap-2">
                     <flux:icon.lock-closed class="size-5 text-orange-500" />
                     <h3 class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Account Status</h3>
+                    <flux:tooltip content="Based on your recent login attempt history.">
+                        <flux:icon.information-circle class="size-4 text-zinc-400" />
+                    </flux:tooltip>
                 </div>
                 <p class="mt-2 text-xl font-bold">
                     @if($metrics['user_is_locked'])
@@ -39,7 +42,10 @@
             <div class="flex flex-col rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-zinc-900">
                 <div class="flex items-center gap-2">
                     <flux:icon.document-text class="size-5 text-indigo-500" />
-                    <h3 class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Your Total Sessions</h3>
+                    <h3 class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Recorded Login Events</h3>
+                    <flux:tooltip content="System audit trail of your successful and failed login activities.">
+                        <flux:icon.information-circle class="size-4 text-zinc-400" />
+                    </flux:tooltip>
                 </div>
                 <p class="mt-2 text-3xl font-bold text-zinc-900 dark:text-white">{{ $metrics['my_total_sessions'] }}</p>
             </div>

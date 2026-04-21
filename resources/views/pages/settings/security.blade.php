@@ -91,7 +91,7 @@ new #[Title('Security settings')] class extends Component {
 
     <flux:heading class="sr-only">{{ __('Authentication Credentials') }}</flux:heading>
 
-    <x-pages::settings.layout :heading="__('Passcode & Validation')" :subheading="__('Establish a strong authentication credential to ensure continuous account protection.')">
+    <x-pages::settings.layout :heading="__('Password & Authentication')" :subheading="__('Establish a strong authentication credential to ensure continuous account protection.')">
         <form method="POST" wire:submit="updatePassword" class="mt-6 space-y-6">
             <flux:input
                 wire:model="current_password"

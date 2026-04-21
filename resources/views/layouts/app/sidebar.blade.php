@@ -30,6 +30,10 @@
                         <flux:sidebar.item icon="user-minus" :href="route('admin.account-unlocks')" :current="request()->routeIs('admin.account-unlocks')" wire:navigate>
                             {{ __('Locked Accounts') }}
                         </flux:sidebar.item>
+
+                        <flux:sidebar.item icon="shield-check" :href="route('admin.user-permissions')" :current="request()->routeIs('admin.user-permissions')" wire:navigate>
+                            {{ __('User Permissions') }}
+                        </flux:sidebar.item>
                     </flux:sidebar.group>
                 @endif
             </flux:sidebar.nav>

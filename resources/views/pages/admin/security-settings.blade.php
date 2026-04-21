@@ -49,7 +49,7 @@ new #[Title('Lock Settings')] class extends Component {
                 wire:model="max_failed_attempts" 
                 type="number" 
                 :label="__('Max Failed Attempts')" 
-                :description="__('Number of failed attempts allowed before an account is temporarily locked.')"
+                :description="__('The maximum security threshold allowed before an IP or identity is automatically restricted.')"
                 min="1"
                 max="20"
                 required
@@ -59,7 +59,7 @@ new #[Title('Lock Settings')] class extends Component {
                 wire:model="lock_duration_minutes" 
                 type="number" 
                 :label="__('Lock Duration (Minutes)')" 
-                :description="__('How long the account will remain locked after reaching the threshold.')"
+                :description="__('The temporal cooling-off period before the restricted account is permitted to attempt access again.')"
                 min="1"
                 max="1440"
                 required

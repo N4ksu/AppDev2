@@ -9,7 +9,7 @@
             </h1>
             <p class="text-sm text-zinc-600 dark:text-zinc-400">
                 Login activity is monitored for account protection. <br>
-                <span class="text-red-600 dark:text-red-400">Multiple failed attempts may temporarily lock your account.</span>
+                <span class="text-red-600 dark:text-red-400 font-medium">Multiple failed attempts trigger a security lock to prevent bridge-force attacks.</span>
             </p>
         </div>
 
@@ -51,7 +51,7 @@
             </div>
 
             <!-- Remember Me -->
-            <flux:checkbox name="remember" :label="__('Remember me')" :checked="old('remember')" />
+            <flux:checkbox name="remember" :label="__('Keep me signed in')" :checked="old('remember')" />
 
             <div class="flex items-center justify-end">
                 <flux:button variant="primary" type="submit" class="w-full" data-test="login-button">
@@ -63,7 +63,7 @@
         @if (Route::has('register'))
             <div class="space-x-1 text-sm text-center rtl:space-x-reverse text-zinc-600 dark:text-zinc-400">
                 <span>{{ __('Don\'t have an account?') }}</span>
-                <flux:link :href="route('register')" wire:navigate>{{ __('Sign up') }}</flux:link>
+                <flux:link :href="route('register')" wire:navigate>{{ __('Create one') }}</flux:link>
             </div>
         @endif
     </div>

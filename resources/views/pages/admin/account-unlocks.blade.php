@@ -54,7 +54,7 @@ new #[Title('Locked Accounts')] class extends Component {
     <div class="relative mb-6 w-full">
         <flux:heading size="xl" level="1">{{ __('Locked Accounts') }}</flux:heading>
         <flux:subheading size="lg" class="mb-6">
-            {{ __('Manage accounts currently restricted due to repeated failed login attempts.') }}
+            {{ __('Review and manually restore access for accounts flagged by the automated security monitor.') }}
         </flux:subheading>
         <flux:separator variant="subtle" />
     </div>
@@ -94,7 +94,7 @@ new #[Title('Locked Accounts')] class extends Component {
                             <td class="px-6 py-4 text-right">
                                 <flux:button variant="ghost" size="sm" icon="key" wire:click="unlock({{ $user->id }})"
                                     wire:confirm="{{ __('Are you sure you want to restore access for this user?') }}">
-                                    {{ __('Unlock Account') }}
+                                    {{ __('Restore Access') }}
                                 </flux:button>
                             </td>
                         </tr>

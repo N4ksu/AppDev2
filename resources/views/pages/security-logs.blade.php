@@ -81,8 +81,8 @@ new #[Title('Security Logs')] class extends Component {
             'isAdminView' => $isAdmin,
             'pageTitle' => $isAdmin ? __('Full Security Audit Trail') : __('Your Security Activity'),
             'pageSubtitle' => $isAdmin 
-                ? __('Monitor system-wide login activity, failed attempts, locked accounts, and suspicious access events.') 
-                : __('This page is for you to review your own personal login activity only.'),
+                ? __('Perform system-wide auditing of login activities, identify suspicious patterns, and manage restricted access events.') 
+                : __('Full history of your account access events for personal security monitoring and verification.'),
         ];
     }
 }; ?>

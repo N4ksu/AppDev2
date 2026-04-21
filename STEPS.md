@@ -165,6 +165,30 @@ This starts **Vite**, which handles your Tailwind CSS and interactive UI compone
 
 ---
 
+### Step 9: Manually Creating an Admin Account (via Tinker)
+If you need to create a custom administrator or if you skipped the seeding step, you can create an account directly through the command line.
+
+1. Open your terminal in the project folder.
+2. Run the interactive PHP shell:
+   ```bash
+   php artisan tinker
+   ```
+3. Paste this exact block of code and press Enter:
+   ```php
+   $user = \App\Models\User::firstOrCreate(
+       ['email' => 'admin@example.com'],
+       [
+           'name' => 'Administrator',
+           'password' => Hash::make('password123'),
+       ]
+   );
+   $user->role = 'admin';
+   $user->save();
+   ```
+4. Type `exit` and hit Enter. You can now log in at `http://localhost:8000/login` with these credentials.
+
+---
+
 ## Development Workflow: How to Modify Code
 If you want to modify the system or add new features, follow this workflow:
 
