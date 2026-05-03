@@ -66,7 +66,7 @@ new #[Title('Lock Settings')] class extends Component {
             />
 
             <div class="flex items-center gap-4">
-                <flux:button variant="primary" type="submit">
+                <flux:button variant="filled" type="submit">
                     {{ __('Save Changes') }}
                 </flux:button>
             </div>

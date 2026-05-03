@@ -2,28 +2,50 @@
 
 use App\Http\Middleware\EnsureUserHasRole;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\WebAuthn\WebAuthnLoginController;
+use App\Http\Controllers\WebAuthn\WebAuthnRegisterController;
+use App\Http\Controllers\SecurityActionController;
 
 Route::view('/', 'welcome')->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {
-        $userId = auth()->id();
+        $user = auth()->user();
+        $isAdmin = $user->role === 'admin';
+
+        $query = \App\Models\LoginLog::query();
+        if (!$isAdmin) {
+            $query->where('user_id', $user->id);
+        }
+
+        // Fetch last successful login
+        $lastLogin = null;
+        if (!$isAdmin) {
+            $lastLogin = \App\Models\LoginLog::where('user_id', $user->id)
+                ->where('status', 'success')
+                ->latest()
+                ->first();
+        }
 
         return view('dashboard', [
             'metrics' => [
-                // All counts are scoped to the current user only
-                'my_successful_logins' => \App\Models\LoginLog::where('user_id', $userId)->where('status', 'success')->count(),
-                'my_failed_logins'     => \App\Models\LoginLog::where('user_id', $userId)->where('status', 'failed')->count(),
-                'my_total_sessions'    => \App\Models\LoginLog::where('user_id', $userId)->count(),
-                // Current live lock state — from the user record, not log counts
-                'user_is_locked'       => auth()->user()->is_locked && (auth()->user()->locked_until === null || now()->lessThan(auth()->user()->locked_until)),
+                'my_successful_logins' => \App\Models\LoginLog::where('user_id', $user->id)->where('status', 'success')->count(),
+                'my_failed_logins'     => \App\Models\LoginLog::where('user_id', $user->id)->where('status', 'failed')->count(),
+                'my_total_sessions'    => \App\Models\LoginLog::where('user_id', $user->id)->count(),
+                'user_is_locked'       => $user->is_locked && ($user->locked_until === null || now()->lessThan($user->locked_until)),
+                'global_high_risk'     => $isAdmin ? \App\Models\LoginLog::where('risk_level', 'high_risk')->count() : 0,
             ],
-            // Recent activity: only this user's own login events
-            'recent_logs' => \App\Models\LoginLog::where('user_id', $userId)->latest()->take(10)->get(),
+            'recent_logs' => $query->latest()->take(15)->get(),
+            'last_login' => $lastLogin,
+            'isAdmin' => $isAdmin,
         ]);
     })->name('dashboard');
 
     Route::livewire('security-logs', 'pages::security-logs')->name('security-logs');
+
+    // Centralized Security Actions
+    Route::post('security/lock', [SecurityActionController::class, 'lockAccount'])->name('security.lock');
+    Route::post('security/report', [SecurityActionController::class, 'reportActivity'])->name('security.report');
 
     // Administrative Security Management
     Route::middleware([EnsureUserHasRole::class . ':admin'])->group(function () {
@@ -32,9 +54,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::livewire('admin/user-permissions', 'pages::admin.user-permissions')->name('admin.user-permissions');
     });
 });
-
-use App\Http\Controllers\WebAuthn\WebAuthnLoginController;
-use App\Http\Controllers\WebAuthn\WebAuthnRegisterController;
 
 Route::middleware(['guest'])->group(function () {
     Route::post('webauthn/login/options', [WebAuthnLoginController::class, 'options']);

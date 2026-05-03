@@ -55,7 +55,46 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::createUsersUsing(CreateNewUser::class);
 
         Fortify::authenticateUsing(function (Request $request) {
+            $ipBlockService = app(\App\Services\IPBlockService::class);
+            $riskService = app(\App\Services\RiskScoringService::class);
+
+            // 1. Check if IP is temporarily blocked
+            if ($ipBlockService->isBlocked($request->ip())) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'email' => 'Access temporarily restricted from this IP due to suspicious activity.',
+                ]);
+            }
+
             $user = \App\Models\User::where('email', $request->email)->first();
+
+            // 2. Early Risk Assessment (Even before password check)
+            // We check for brute force or identity guessing patterns
+            $risk = $riskService->calculateRisk($user, $request, 'password', false, $request->email);
+
+            if ($risk['score'] >= 70) {
+                // Deny login immediately
+                \App\Models\LoginLog::create([
+                    'user_id' => $user?->id,
+                    'email' => $request->email,
+                    'ip_address' => $request->ip(),
+                    'user_agent' => $request->userAgent(),
+                    'status' => 'failed',
+                    'action' => 'login',
+                    'login_method' => 'password',
+                    'risk_score' => $risk['score'],
+                    'risk_level' => $risk['level'],
+                    'action_taken' => 'denied', // STRICT MITIGATION
+                ]);
+
+                // Optionally block IP if risk is extreme or repeated
+                if ($risk['score'] >= 90) {
+                    $ipBlockService->block($request->ip(), 10); // 10 minute block
+                }
+
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'email' => 'Security Threat Detected: Access Denied. Your activity has been logged for forensic review.',
+                ]);
+            }
 
             if ($user && $user->is_locked) {
                 if ($user->locked_until && now()->lessThan($user->locked_until)) {
@@ -67,10 +106,22 @@ class FortifyServiceProvider extends ServiceProvider
                     $user->failed_attempts = 0;
                     $user->locked_until = null;
                     $user->save();
+                    
+                    // Log the auto-unlock
+                    \App\Models\LoginLog::create([
+                        'user_id' => $user->id,
+                        'email' => $user->email,
+                        'ip_address' => $request->ip(),
+                        'action' => 'account_unlock',
+                        'status' => 'success',
+                        'login_method' => 'system',
+                        'action_taken' => 'allowed'
+                    ]);
                 }
             }
 
             if ($user && \Illuminate\Support\Facades\Hash::check($request->password, $user->password)) {
+                session(['login_method' => 'password']); // For successful login listener
                 return $user;
             }
 

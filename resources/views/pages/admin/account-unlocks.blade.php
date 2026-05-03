@@ -22,6 +22,19 @@ new #[Title('Locked Accounts')] class extends Component {
         $user->locked_until = null;
         $user->save();
 
+        \App\Models\LoginLog::create([
+            'user_id' => $user->id,
+            'email' => $user->email,
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+            'status' => 'success',
+            'action' => 'account_unlock',
+            'login_method' => 'admin_action',
+            'risk_score' => 0,
+            'risk_level' => 'safe',
+            'action_taken' => 'allowed',
+        ]);
+
         $this->loadLockedUsers();
 
         Flux::toast(variant: 'success', text: __('Access restored for :email.', ['email' => $user->email]));

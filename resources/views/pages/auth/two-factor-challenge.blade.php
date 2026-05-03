@@ -42,7 +42,7 @@
 
                 <div class="space-y-5 text-center">
                     <div x-show="!showRecoveryInput">
-                        <div class="flex items-center justify-center my-5">
+                        <div class="flex flex-col items-center justify-center my-5">
                             <flux:otp
                                 x-model="code"
                                 length="6"
@@ -51,6 +51,9 @@
                                 label:sr-only
                                 class="mx-auto"
                              />
+                            @error('code')
+                                <flux:text color="red" class="mt-3 font-semibold">{{ $message }}</flux:text>
+                            @enderror
                         </div>
                     </div>
 

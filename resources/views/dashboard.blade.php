@@ -3,160 +3,130 @@
 
         <!-- Top Metrics Cards -->
         <div class="grid auto-rows-min gap-4 md:grid-cols-4">
-            
-            <div class="flex flex-col rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-zinc-900">
+
+            <div
+                class="flex flex-col rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-zinc-900">
                 <div class="flex items-center gap-2">
                     <flux:icon.check-circle class="size-5 text-emerald-500" />
-                    <h3 class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Your Successful Logins</h3>
+                    <h3 class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Successful Logins</h3>
                 </div>
-                <p class="mt-2 text-3xl font-bold text-zinc-900 dark:text-white">{{ $metrics['my_successful_logins'] }}</p>
+                <p class="mt-2 text-3xl font-bold text-zinc-900 dark:text-white">{{ $metrics['my_successful_logins'] }}
+                </p>
             </div>
 
-            <div class="flex flex-col rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-zinc-900">
+            <div
+                class="flex flex-col rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-zinc-900">
                 <div class="flex items-center gap-2">
                     <flux:icon.x-circle class="size-5 text-red-500" />
-                    <h3 class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Your Failed Attempts</h3>
+                    <h3 class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Failed Attempts</h3>
                 </div>
                 <p class="mt-2 text-3xl font-bold text-zinc-900 dark:text-white">{{ $metrics['my_failed_logins'] }}</p>
             </div>
 
-            <div class="flex flex-col rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-zinc-900">
+            <div
+                class="flex flex-col rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-zinc-900">
                 <div class="flex items-center gap-2">
-                    <flux:icon.lock-closed class="size-5 text-orange-500" />
-                    <h3 class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Account Status</h3>
-                    <flux:tooltip content="Based on your recent login attempt history.">
-                        <flux:icon.information-circle class="size-4 text-zinc-400" />
-                    </flux:tooltip>
+                    <flux:icon.shield-exclamation class="size-5 text-orange-500" />
+                    <h3 class="text-sm font-medium text-zinc-500 dark:text-zinc-400">High Risk Detected</h3>
+                </div>
+                <p class="mt-2 text-3xl font-bold text-zinc-900 dark:text-white">{{ $metrics['global_high_risk'] }}</p>
+            </div>
+
+            <div
+                class="flex flex-col rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-zinc-900">
+                <div class="flex items-center gap-2">
+                    <flux:icon.lock-closed class="size-5 text-indigo-500" />
+                    <h3 class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Account Lock Status</h3>
                 </div>
                 <p class="mt-2 text-xl font-bold">
                     @if($metrics['user_is_locked'])
-                        <span class="text-red-500 dark:text-red-400 italic">Locked</span>
-                    @elseif(auth()->user()->failed_attempts > 0)
-                        <span class="text-orange-500 dark:text-orange-400 italic">Warning</span>
+                        <span class="text-red-500 italic">LOCKED</span>
                     @else
-                        <span class="text-emerald-500 dark:text-emerald-400">Secure</span>
+                        <span class="text-emerald-500 italic">SECURE</span>
                     @endif
                 </p>
             </div>
 
-            <div class="flex flex-col rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-zinc-900">
-                <div class="flex items-center gap-2">
-                    <flux:icon.document-text class="size-5 text-indigo-500" />
-                    <h3 class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Recorded Login Events</h3>
-                    <flux:tooltip content="System audit trail of your successful and failed login activities.">
-                        <flux:icon.information-circle class="size-4 text-zinc-400" />
-                    </flux:tooltip>
-                </div>
-                <p class="mt-2 text-3xl font-bold text-zinc-900 dark:text-white">{{ $metrics['my_total_sessions'] }}</p>
-            </div>
-            
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <!-- Recent Logs Table -->
-            <div class="md:col-span-2 rounded-xl border border-neutral-200 bg-white dark:border-neutral-700 dark:bg-zinc-900 overflow-hidden">
-                <div class="p-6 border-b border-neutral-200 dark:border-neutral-700 flex justify-between items-center">
-                    <h2 class="text-lg font-bold text-zinc-900 dark:text-white">Recent Login Activity</h2>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm whitespace-nowrap">
-                        <thead class="bg-zinc-50 text-zinc-500 dark:bg-zinc-800/50 dark:text-zinc-400">
-                            <tr>
-                                <th class="px-6 py-4 font-medium">Date & Time</th>
-                                <th class="px-6 py-4 font-medium">User</th>
-                                <th class="px-6 py-4 font-medium">IP Address</th>
-                                <th class="px-6 py-4 font-medium">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-neutral-200 dark:divide-neutral-700">
-                            @forelse($recent_logs as $log)
-                                <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
-                                    <td class="px-6 py-4 text-zinc-500 dark:text-zinc-400">{{ $log->created_at->format('M d, Y h:i A') }}</td>
-                                    <td class="px-6 py-4 font-medium text-zinc-900 dark:text-white">
-                                        {{ $log->user ? $log->user->name : 'Unknown / Failed Attempt' }}
-                                    </td>
-                                    <td class="px-6 py-4 text-zinc-500 dark:text-zinc-400">{{ $log->ip_address }}</td>
-                                    <td class="px-6 py-4">
-                                        @if($log->status === 'success')
-                                            <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2 py-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400"><flux:icon.check-circle class="size-3" /> Success</span>
-                                        @else
-                                            <span class="inline-flex items-center gap-1.5 rounded-full bg-red-500/10 px-2 py-1 text-xs font-semibold text-red-600 dark:text-red-400"><flux:icon.x-circle class="size-3" /> Failed</span>
-                                        @endif
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="4" class="px-6 py-8 text-center text-zinc-500 dark:text-zinc-400">No login activity logged yet.</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Personalized User Security Context -->
-            <div class="flex flex-col gap-4">
-                <div class="rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-zinc-900">
-                    <h2 class="text-lg font-bold text-zinc-900 dark:text-white mb-4">Your Security Status</h2>
-                    <div class="flex flex-col gap-3">
-                        <div class="flex justify-between items-center pb-3 border-b border-neutral-200 dark:border-neutral-700">
-                            <span class="text-sm text-zinc-500 dark:text-zinc-400">Account Lock Status</span>
-                            @if($metrics['user_is_locked'])
-                                <span class="text-sm font-semibold text-red-600 dark:text-red-400">Locked</span>
-                            @else
-                                <span class="text-sm font-semibold text-emerald-600 dark:text-emerald-400">Secure</span>
-                            @endif
+        @if(!$isAdmin)
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {{-- 1. Last Login Summary --}}
+                <div class="p-6 rounded-2xl border border-neutral-200 bg-white dark:border-neutral-700 dark:bg-zinc-900 shadow-sm border-t-4 border-t-indigo-600">
+                    <div class="flex items-center gap-2 mb-4">
+                        <flux:icon.clock class="size-5 text-indigo-500" />
+                        <h2 class="text-sm font-black text-zinc-900 dark:text-white uppercase italic tracking-tight">{{ __('Last Login Summary') }}</h2>
+                    </div>
+                    
+                    @if($last_login)
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-center text-xs">
+                                <span class="text-zinc-500">{{ __('Verified Time') }}</span>
+                                <span class="font-bold text-zinc-900 dark:text-white">{{ $last_login->created_at->diffForHumans() }}</span>
+                            </div>
+                            <div class="flex justify-between items-center text-xs">
+                                <span class="text-zinc-500">{{ __('Location / IP') }}</span>
+                                <span class="font-mono font-bold text-zinc-900 dark:text-white">{{ $last_login->ip_address }}</span>
+                            </div>
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="text-zinc-500">{{ __('Method Used') }}</span>
+                            <div class="flex items-center gap-1.5 min-w-0">
+                                <flux:icon :icon="$last_login->login_method === 'passkey' ? 'finger-print' : 'key'" class="size-3 text-zinc-400" />
+                                <span class="font-black uppercase text-[10px] text-zinc-600 dark:text-zinc-400 truncate">{{ $last_login->login_method }}</span>
+                            </div>
                         </div>
-                        <div class="flex justify-between items-center pb-3 border-b border-neutral-200 dark:border-neutral-700">
-                            <span class="text-sm text-zinc-500 dark:text-zinc-400">Failed Login Attempts</span>
-                            <span class="text-sm font-semibold {{ auth()->user()->failed_attempts > 0 ? 'text-orange-500 dark:text-orange-400' : 'text-zinc-900 dark:text-white' }}">
-                                {{ auth()->user()->failed_attempts }}
-                            </span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm text-zinc-500 dark:text-zinc-400">Member Since</span>
-                            <span class="text-sm font-medium text-zinc-900 dark:text-white">{{ auth()->user()->created_at->format('M d, Y') }}</span>
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="text-zinc-500">{{ __('Integrity Status') }}</span>
+                            <span class="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 text-[9px] font-black uppercase border border-emerald-200">Verified</span>
                         </div>
                     </div>
-                </div>
-                
-                <div class="rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-zinc-900 mt-4">
-                    <h2 class="text-lg font-bold text-zinc-900 dark:text-white mb-4">Passkeys (WebAuthn)</h2>
-                    <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-4">Secure your account using biometric authentication (fingerprint, FaceID) or security keys.</p>
-                    <meta name="csrf-token" content="{{ csrf_token() }}">
-                    <flux:button type="button" onclick="registerPasskey()" variant="primary" class="w-full justify-center">
-                        <flux:icon.finger-print class="size-5 mr-2" /> Register Passkey
+                @else
+                    <p class="text-xs text-zinc-400 italic py-4 text-center">{{ __('No successful login history found.') }}</p>
+                @endif
+
+                <div class="mt-6 pt-4 border-t border-neutral-100 dark:border-neutral-800">
+                     <flux:button href="{{ route('security-logs') }}" variant="ghost" size="xs" icon-trailing="chevron-right" class="w-full">
+                        {{ __('View Full Audit Trail') }}
                     </flux:button>
                 </div>
             </div>
+
+            {{-- 2. Account Protection Actions --}}
+            <div class="p-6 rounded-2xl border border-neutral-200 bg-white dark:border-neutral-700 dark:bg-zinc-900 shadow-sm border-t-4 border-t-red-600">
+                <div class="flex items-center gap-2 mb-4">
+                    <flux:icon.bolt class="size-5 text-red-500" />
+                    <h2 class="text-sm font-black text-zinc-900 dark:text-white uppercase italic tracking-tight">{{ __('Account Protection') }}</h2>
+                </div>
+                
+                <p class="text-xs text-zinc-500 mb-6">{{ __('Immediate defensive triggers to secure your identity in case of suspected compromise.') }}</p>
+
+                <div class="flex flex-col gap-3">
+                    <form action="{{ route('security.report') }}" method="POST" onsubmit="return confirm('Immediately lock your account and report suspicious activity?')">
+                        @csrf
+                        <flux:button type="submit" variant="subtle" size="sm" class="w-full justify-start text-red-600 hover:bg-red-50">
+                            <flux:icon.shield-exclamation class="size-3 mr-2" /> {{ __('This wasn\'t me') }}
+                        </flux:button>
+                    </form>
+
+                    <form action="{{ route('security.lock') }}" method="POST" onsubmit="return confirm('Immediately lock your account? You will need administrative assistance or a verified recovery method to unlock.')">
+                        @csrf
+                        <flux:button type="submit" variant="ghost" size="sm" class="w-full justify-start text-orange-600">
+                            <flux:icon.lock-closed class="size-3 mr-2" /> {{ __('Lock my account') }}
+                        </flux:button>
+                    </form>
+                </div>
+            </div>
         </div>
-
+        @else
+            <div class="rounded-xl border border-neutral-200 bg-white p-8 dark:border-neutral-700 dark:bg-zinc-900 shadow-xl shadow-zinc-900/5 flex flex-col items-center text-center">
+                <flux:icon.shield-check class="size-16 text-indigo-500 mb-4" />
+                <h2 class="text-2xl font-black text-zinc-900 dark:text-white uppercase italic">{{ __('Security Integrity Verified') }}</h2>
+                <p class="text-zinc-500 max-w-lg mt-2 mb-8">{{ __('Your administrative account is protected by enterprise-grade risk monitoring and biometric authentication traces.') }}</p>
+                
+                <flux:button href="{{ route('security-logs') }}" variant="filled" size="base" icon-trailing="chevron-right" class="px-8 py-4">
+                    {{ __('Open Security Command Center') }}
+                </flux:button>
+            </div>
+        @endif
     </div>
-
-    <script src="/js/webauthn.js"></script>
-    <script>
-        function registerPasskey() {
-            const csrfTokenElement = document.querySelector('meta[name="csrf-token"]') || document.querySelector('input[name="_token"]');
-            const token = csrfTokenElement ? (csrfTokenElement.content || csrfTokenElement.value) : null;
-            
-            const webauthn = new WebAuthn({
-                 registerOptions: '/webauthn/register/options',
-                 register: '/webauthn/register'
-            }, {}, false, token);
-            
-            webauthn.register().then(() => {
-                alert('Passkey successfully registered!');
-            }).catch(async (error) => {
-                if (error.name === 'NotAllowedError') return;
-                console.error(error);
-                let msg = 'Failed to register passkey.';
-                if (error instanceof Error) {
-                    msg += " (" + error.name + ": " + error.message + ")";
-                } else if (error && error.json) {
-                    try { const err = await error.json(); if (err.message) msg = err.message; } catch(e){}
-                }
-                alert(msg);
-            });
-        }
-    </script>
 </x-layouts::app>

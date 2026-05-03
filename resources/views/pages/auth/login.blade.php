@@ -54,7 +54,7 @@
             <flux:checkbox name="remember" :label="__('Keep me signed in')" :checked="old('remember')" />
 
             <div class="flex flex-col gap-3 mt-2">
-                <flux:button variant="primary" type="submit" class="w-full" data-test="login-button">
+                <flux:button variant="filled" type="submit" class="w-full" data-test="login-button">
                     {{ __('Log in with Password') }}
                 </flux:button>
                 <div class="relative flex items-center">

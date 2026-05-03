@@ -11,11 +11,12 @@ class RecordFailedLogin
 {
     public function handle(Failed $event): void
     {
-        // null as $event->user. The submitted email is in $event->credentials instead.
-        $submittedEmail = $event->credentials[Fortify::username()] ?? null;
-
-        // Look up the real user by the submitted email so we can track failed_attempts.
-        $user = $submittedEmail ? User::where('email', $submittedEmail)->first() : null;
+        /** @var \App\Models\User|null $user */
+        $user = $event->user;
+        $submittedEmail = $event->credentials['email'] ?? null;
+        $method = request()->is('webauthn/login*') ? 'passkey' : 'password';
+        $riskService = app(\App\Services\RiskScoringService::class);
+        $risk = $riskService->calculateRisk($user, request(), $method, false, $submittedEmail);
 
         if ($user) {
             // Fetch dynamic security settings
@@ -32,9 +33,11 @@ class RecordFailedLogin
             }
 
             $isLockingNow = false;
-            if (!$alreadyLocked && $user->failed_attempts >= $settings->max_failed_attempts) {
+            // PROACTIVE LOCK: If risk is HIGH (>=70) or max attempts reached
+            if (!$alreadyLocked && ($user->failed_attempts >= $settings->max_failed_attempts || $risk['score'] >= 70)) {
                 $user->is_locked    = true;
-                $user->locked_until = now()->addMinutes($settings->lock_duration_minutes);
+                $lockMinutes = ($risk['score'] >= 70) ? 60 : $settings->lock_duration_minutes; // High risk gets 1 hour lock
+                $user->locked_until = now()->addMinutes($lockMinutes);
                 $isLockingNow = true;
             }
 
@@ -43,25 +46,33 @@ class RecordFailedLogin
             // Determine status for this log entry
             $status = ($alreadyLocked || $isLockingNow) ? 'locked' : 'failed';
 
-            $method = request()->is('webauthn/login*') ? 'passkey' : 'password';
-
             LoginLog::create([
                 'user_id'    => $user->id,
                 'email'      => $user->email,
                 'ip_address' => request()->ip(),
+                'user_agent' => request()->userAgent(),
                 'status'     => $status,
+                'action'     => 'login',
                 'login_method' => $method,
+                'failed_attempts' => $user->failed_attempts,
+                'risk_score'   => $risk['score'],
+                'risk_level'   => $risk['level'],
+                'action_taken' => $status === 'locked' ? 'locked' : 'denied',
             ]);
         } else {
             // Log failed attempts for non-existent users
-            $method = request()->is('webauthn/login*') ? 'passkey' : 'password';
-
             LoginLog::create([
                 'user_id'    => null,
                 'email'      => $submittedEmail,
                 'ip_address' => request()->ip(),
+                'user_agent' => request()->userAgent(),
                 'status'     => 'failed',
+                'action'     => 'login',
                 'login_method' => $method,
+                'failed_attempts' => 0,
+                'risk_score'   => $risk['score'],
+                'risk_level'   => $risk['level'],
+                'action_taken' => 'denied',
             ]);
         }
     }
