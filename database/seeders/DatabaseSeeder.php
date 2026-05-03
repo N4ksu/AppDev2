@@ -15,15 +15,6 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        // Create a demo/sample user only in development or when explicitly enabled.
-        // This avoids creating unwanted users during normal application runtime.
-        if (app()->environment('local') || env('APP_DEMO', false)) {
-            User::factory()->create([
-                'name' => 'Test User',
-                'email' => 'test@example.com',
-            ]);
-        }
-
         $this->call([
             SecuritySettingSeeder::class,
         ]);
