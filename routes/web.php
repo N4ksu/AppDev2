@@ -33,4 +33,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 });
 
+use App\Http\Controllers\WebAuthn\WebAuthnLoginController;
+use App\Http\Controllers\WebAuthn\WebAuthnRegisterController;
+
+Route::middleware(['guest'])->group(function () {
+    Route::post('webauthn/login/options', [WebAuthnLoginController::class, 'options']);
+    Route::post('webauthn/login', [WebAuthnLoginController::class, 'login'])->name('webauthn.login');
+});
+
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::post('webauthn/register/options', [WebAuthnRegisterController::class, 'options']);
+    Route::post('webauthn/register', [WebAuthnRegisterController::class, 'register'])->name('webauthn.register');
+});
+
 require __DIR__.'/settings.php';

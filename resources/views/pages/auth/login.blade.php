@@ -53,9 +53,18 @@
             <!-- Remember Me -->
             <flux:checkbox name="remember" :label="__('Keep me signed in')" :checked="old('remember')" />
 
-            <div class="flex items-center justify-end">
+            <div class="flex flex-col gap-3 mt-2">
                 <flux:button variant="primary" type="submit" class="w-full" data-test="login-button">
-                    {{ __('Log in') }}
+                    {{ __('Log in with Password') }}
+                </flux:button>
+                <div class="relative flex items-center">
+                    <div class="flex-grow border-t border-zinc-200 dark:border-zinc-700"></div>
+                    <span class="shrink-0 px-2 text-sm text-zinc-500 dark:text-zinc-400">or</span>
+                    <div class="flex-grow border-t border-zinc-200 dark:border-zinc-700"></div>
+                </div>
+                <meta name="csrf-token" content="{{ csrf_token() }}">
+                <flux:button type="button" onclick="loginWithPasskey()" class="w-full">
+                    <flux:icon.finger-print class="size-5 mr-2" /> {{ __('Log in with Passkey') }}
                 </flux:button>
             </div>
         </form>
@@ -67,4 +76,40 @@
             </div>
         @endif
     </div>
+
+    <script src="/js/webauthn.js"></script>
+    <script>
+        function loginWithPasskey() {
+            const emailInput = document.querySelector('input[name="email"]');
+            const data = {};
+            if (emailInput && emailInput.value) {
+                data.email = emailInput.value;
+            }
+            
+            const webauthn = new WebAuthn({
+                 loginOptions: '/webauthn/login/options',
+                 login: '/webauthn/login'
+            });
+            webauthn.login(data).then(() => {
+                window.location.href = "{{ route('dashboard') }}";
+            }).catch(async (error) => {
+                if (error.name === 'NotAllowedError') return;
+                let msg = 'Passkey authentication failed.';
+                if (error && error.json) {
+                    try { 
+                        const err = await error.json(); 
+                        if (err.errors && err.errors.email) {
+                            msg = err.errors.email[0];
+                        } else if (err.message) {
+                            msg = err.message; 
+                        }
+                    } catch(e){}
+                }
+                if (error instanceof Error && msg === 'Passkey authentication failed.') {
+                    msg += " (" + error.message + ")";
+                }
+                alert(msg);
+            });
+        }
+    </script>
 </x-layouts::auth>

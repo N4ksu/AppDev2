@@ -13,11 +13,14 @@ class RecordSuccessfulLogin
         /** @var User $user */
         $user = $event->user;
 
+        $method = request()->is('webauthn/login*') ? 'passkey' : 'password';
+
         LoginLog::create([
             'user_id' => $user->getAuthIdentifier(),
             'email' => $user->email,
             'ip_address' => request()->ip(),
-            'status' => 'success'
+            'status' => 'success',
+            'login_method' => $method,
         ]);
 
         if ($user) {

@@ -43,19 +43,25 @@ class RecordFailedLogin
             // Determine status for this log entry
             $status = ($alreadyLocked || $isLockingNow) ? 'locked' : 'failed';
 
+            $method = request()->is('webauthn/login*') ? 'passkey' : 'password';
+
             LoginLog::create([
                 'user_id'    => $user->id,
                 'email'      => $user->email,
                 'ip_address' => request()->ip(),
                 'status'     => $status,
+                'login_method' => $method,
             ]);
         } else {
             // Log failed attempts for non-existent users
+            $method = request()->is('webauthn/login*') ? 'passkey' : 'password';
+
             LoginLog::create([
                 'user_id'    => null,
                 'email'      => $submittedEmail,
                 'ip_address' => request()->ip(),
                 'status'     => 'failed',
+                'login_method' => $method,
             ]);
         }
     }

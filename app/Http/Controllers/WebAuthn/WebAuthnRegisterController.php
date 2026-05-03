@@ -17,7 +17,6 @@ class WebAuthnRegisterController
     public function options(AttestationRequest $request): Responsable
     {
         return $request
-            ->fastRegistration()
 //            ->userless()
 //            ->allowDuplicates()
             ->toCreate();

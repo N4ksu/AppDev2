@@ -119,8 +119,44 @@
                         </div>
                     </div>
                 </div>
+                
+                <div class="rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-zinc-900 mt-4">
+                    <h2 class="text-lg font-bold text-zinc-900 dark:text-white mb-4">Passkeys (WebAuthn)</h2>
+                    <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-4">Secure your account using biometric authentication (fingerprint, FaceID) or security keys.</p>
+                    <meta name="csrf-token" content="{{ csrf_token() }}">
+                    <flux:button type="button" onclick="registerPasskey()" variant="primary" class="w-full justify-center">
+                        <flux:icon.finger-print class="size-5 mr-2" /> Register Passkey
+                    </flux:button>
+                </div>
             </div>
         </div>
 
     </div>
+
+    <script src="/js/webauthn.js"></script>
+    <script>
+        function registerPasskey() {
+            const csrfTokenElement = document.querySelector('meta[name="csrf-token"]') || document.querySelector('input[name="_token"]');
+            const token = csrfTokenElement ? (csrfTokenElement.content || csrfTokenElement.value) : null;
+            
+            const webauthn = new WebAuthn({
+                 registerOptions: '/webauthn/register/options',
+                 register: '/webauthn/register'
+            }, {}, false, token);
+            
+            webauthn.register().then(() => {
+                alert('Passkey successfully registered!');
+            }).catch(async (error) => {
+                if (error.name === 'NotAllowedError') return;
+                console.error(error);
+                let msg = 'Failed to register passkey.';
+                if (error instanceof Error) {
+                    msg += " (" + error.name + ": " + error.message + ")";
+                } else if (error && error.json) {
+                    try { const err = await error.json(); if (err.message) msg = err.message; } catch(e){}
+                }
+                alert(msg);
+            });
+        }
+    </script>
 </x-layouts::app>
