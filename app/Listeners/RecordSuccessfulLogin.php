@@ -34,10 +34,10 @@ class RecordSuccessfulLogin
         if ($user) {
             $user->last_login_ip = request()->ip();
 
-            if ($user->failed_attempts > 0 || $user->is_locked) {
+            // Only reset failed_attempts for non-locked users.
+            // A locked user must be explicitly unlocked by an admin — never auto-cleared on login.
+            if (!$user->is_locked && $user->failed_attempts > 0) {
                 $user->failed_attempts = 0;
-                $user->is_locked = false;
-                $user->locked_until = null;
             }
 
             $user->save();

@@ -42,22 +42,9 @@ new #[Title('Locked Accounts')] class extends Component {
 
     public function loadLockedUsers(): void
     {
-        // 1. Auto-cleanup EXPIRED locks so the database stays clean
-        User::where('is_locked', true)
-            ->whereNotNull('locked_until')
-            ->where('locked_until', '<=', now())
-            ->update([
-                'is_locked' => false,
-                'failed_attempts' => 0,
-                'locked_until' => null,
-            ]);
-
-        // 2. Load the users that are STILL ACTIVELY restricted
+        // Load all users that are currently restricted.
+        // We no longer auto-cleanup expired locks; all unlocks must be manual by an administrator.
         $this->lockedUsers = User::where('is_locked', true)
-            ->where(function ($query) {
-                $query->whereNull('locked_until')
-                    ->orWhere('locked_until', '>', now());
-            })
             ->latest()
             ->get();
     }
@@ -67,7 +54,7 @@ new #[Title('Locked Accounts')] class extends Component {
     <div class="relative mb-6 w-full">
         <flux:heading size="xl" level="1">{{ __('Locked Accounts') }}</flux:heading>
         <flux:subheading size="lg" class="mb-6">
-            {{ __('Review and manually restore access for accounts flagged by the automated security monitor.') }}
+            {{ __('Review and restore access for accounts restricted by the security monitor or self-locked by users. Access can only be restored manually.') }}
         </flux:subheading>
         <flux:separator variant="subtle" />
     </div>

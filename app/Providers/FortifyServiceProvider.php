@@ -97,27 +97,9 @@ class FortifyServiceProvider extends ServiceProvider
             }
 
             if ($user && $user->is_locked) {
-                if ($user->locked_until && now()->lessThan($user->locked_until)) {
-                    throw \Illuminate\Validation\ValidationException::withMessages([
-                        'email' => 'Your account has been locked due to multiple failed login attempts.',
-                    ]);
-                } else {
-                    $user->is_locked = false;
-                    $user->failed_attempts = 0;
-                    $user->locked_until = null;
-                    $user->save();
-                    
-                    // Log the auto-unlock
-                    \App\Models\LoginLog::create([
-                        'user_id' => $user->id,
-                        'email' => $user->email,
-                        'ip_address' => $request->ip(),
-                        'action' => 'account_unlock',
-                        'status' => 'success',
-                        'login_method' => 'system',
-                        'action_taken' => 'allowed'
-                    ]);
-                }
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'email' => 'Your account has been restricted for security reasons. Please contact an administrator.',
+                ]);
             }
 
             if ($user && \Illuminate\Support\Facades\Hash::check($request->password, $user->password)) {
