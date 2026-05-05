@@ -19,6 +19,11 @@
                     <flux:sidebar.item icon="list-bullet" :href="route('security-logs')" :current="request()->routeIs('security-logs')" wire:navigate>
                         {{ __('Security Logs') }}
                     </flux:sidebar.item>
+
+                    <flux:sidebar.item icon="chat-bubble-left-right" :href="route('security-chat')" :current="request()->routeIs('security-chat')" wire:navigate>
+                        {{ __('Security Chat') }}
+                        <flux:badge size="sm" color="indigo" class="ml-auto">AI</flux:badge>
+                    </flux:sidebar.item>
                 </flux:sidebar.group>
 
                 @if(auth()->user()->role === 'admin')

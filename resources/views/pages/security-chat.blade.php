@@ -1,0 +1,206 @@
+<?php
+
+use Livewire\Attributes\Title;
+use Livewire\Component;
+
+new #[Title('Security Chat')] class extends Component {
+    public array $messages = [];
+    public string $input = '';
+    public bool $loading = false;
+
+    public function mount(): void
+    {
+        $this->messages[] = [
+            'role' => 'system',
+            'content' => 'Ask me anything about recent login events (e.g., "Show me all high-risk logins from the last 24 hours" or "Who logged in from a new device today?").',
+        ];
+    }
+
+    public function sendMessage(?string $question = null): void
+    {
+        $message = trim($question ?? $this->input);
+        if ($message === '') {
+            return;
+        }
+
+        $this->messages[] = [
+            'role' => 'user',
+            'content' => $message,
+        ];
+
+        $this->input = '';
+        $this->loading = true;
+
+        try {
+            $response = app(\App\Http\Controllers\SecurityChatController::class);
+            
+            $groq = app(\App\Services\GroqRiskAssessment::class);
+            
+            // Fetch last 20 login events (optimized for token usage)
+            $events = \App\Models\LoginLog::with('user:id,name,email')
+                ->latest()
+                ->take(20)
+                ->get()
+                ->map(fn (\App\Models\LoginLog $log) => [
+                    'user' => $log->user?->name ?? $log->email ?? 'unknown',
+                    'email' => $log->email,
+                    'timestamp' => $log->created_at?->toIso8601String(),
+                    'biometric_type' => $log->login_method,
+                    'device' => $log->user_agent,
+                    'ip_address' => $log->ip_address,
+                    'status' => $log->status,
+                    'risk_score' => $log->ai_risk_score ?? $log->risk_score,
+                    'anomaly_flags' => $log->anomaly_flags ?? [],
+                    'explanation' => $log->explanation ?? '',
+                    'recommended_action' => $log->recommended_action ?? 'allow',
+                ]);
+
+            $eventsJson = json_encode($events, JSON_PRETTY_PRINT);
+            // Trim JSON to avoid context overflow
+            $eventsJson = substr($eventsJson, 0, 15000);
+            
+            $reply = $groq->chat($message, $eventsJson);
+
+            $this->messages[] = [
+                'role' => 'assistant',
+                'content' => $reply ?? "I'm sorry, the AI security assistant is currently hit by a rate limit or quota issue (429) from Groq. Please check your GROQ_API_KEY.",
+            ];
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('SecurityChat error: ' . $e->getMessage());
+            $this->messages[] = [
+                'role' => 'assistant',
+                'content' => 'An error occurred while processing your request. Please try again.',
+            ];
+        }
+
+        $this->loading = false;
+    }
+}; ?>
+
+<div class="flex flex-col gap-6 w-full max-w-4xl mx-auto">
+    {{-- Header --}}
+    <div class="relative mb-2 w-full text-center lg:text-left">
+        <div class="flex items-center gap-3 justify-center lg:justify-start">
+            <div class="flex items-center justify-center size-10 rounded-xl bg-indigo-500 shadow-lg shadow-indigo-500/30">
+                <flux:icon.chat-bubble-left-right class="size-5 text-white" />
+            </div>
+            <div>
+                <flux:heading size="xl" level="1" class="!text-indigo-600 dark:!text-indigo-400 font-black tracking-tight">
+                    {{ __('Security Chat') }}
+                </flux:heading>
+                <flux:subheading size="sm">
+                    {{ __('AI-powered security assistant for login event analysis') }}
+                </flux:subheading>
+            </div>
+            <flux:badge size="sm" color="indigo" class="ml-2">AI</flux:badge>
+        </div>
+    </div>
+
+    {{-- Chat Container --}}
+    <div class="rounded-2xl border border-neutral-200 bg-white dark:border-neutral-700 dark:bg-zinc-900 shadow-xl shadow-zinc-900/5 flex flex-col" style="height: calc(100vh - 260px); min-height: 400px;">
+        
+        {{-- Messages Area --}}
+        <div class="flex-1 overflow-y-auto p-6 space-y-4" id="chat-messages" 
+             x-data x-init="$nextTick(() => $el.scrollTop = $el.scrollHeight)"
+             x-effect="$wire.messages; $nextTick(() => $el.scrollTop = $el.scrollHeight)">
+            
+            @foreach($messages as $msg)
+                @if($msg['role'] === 'system')
+                    {{-- System intro message --}}
+                    <div class="flex justify-center">
+                        <div class="max-w-lg px-4 py-3 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/50 text-center">
+                            <div class="flex items-center justify-center gap-2 mb-1">
+                                <flux:icon.sparkles class="size-4 text-indigo-500" />
+                                <span class="text-[11px] font-black uppercase tracking-wider text-indigo-600 dark:text-indigo-400">AI Security Assistant</span>
+                            </div>
+                            <p class="text-xs text-zinc-600 dark:text-zinc-400">{{ $msg['content'] }}</p>
+                        </div>
+                    </div>
+                @elseif($msg['role'] === 'user')
+                    {{-- User message --}}
+                    <div class="flex justify-end">
+                        <div class="max-w-[75%] px-4 py-3 rounded-2xl rounded-tr-sm bg-indigo-600 text-white shadow-md">
+                            <p class="text-sm whitespace-pre-wrap">{{ $msg['content'] }}</p>
+                        </div>
+                    </div>
+                @else
+            {{-- AI response --}}
+                    <div class="flex justify-start gap-3">
+                        <div class="flex-shrink-0 flex items-start">
+                            <div class="size-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-md">
+                                <flux:icon.sparkles class="size-4 text-white" />
+                            </div>
+                        </div>
+                        <div class="max-w-[75%] px-4 py-3 rounded-2xl rounded-tl-sm bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 shadow-sm">
+                            <div class="prose prose-sm dark:prose-invert prose-p:leading-relaxed prose-pre:bg-zinc-900 prose-pre:text-white prose-li:my-0 text-zinc-800 dark:text-zinc-200"
+                                 x-data="{ content: @js($msg['content']) }"
+                                 x-html="window.marked ? window.DOMPurify.sanitize(window.marked.parse(content)) : content">
+                            </div>
+                        </div>
+                    </div>
+                @endif
+            @endforeach
+
+            {{-- Suggested Questions (only if chat is empty) --}}
+            @if(count($messages) === 1 && !$loading)
+                <div class="flex flex-col items-center gap-3 py-10">
+                    <p class="text-xs font-medium text-zinc-500 uppercase tracking-widest">{{ __('Try asking...') }}</p>
+                    <div class="flex flex-wrap justify-center gap-2 max-w-2xl">
+                        @foreach([
+                            "Show me high-risk logins today",
+                            "Any logins from new devices recently?",
+                            "Who logged in outside normal working hours?",
+                            "Explain what a risk score means",
+                            "How do I register a passwordless passkey?",
+                            "Show all logins with anomaly flags"
+                        ] as $question)
+                            <button 
+                                type="button"
+                                wire:click="sendMessage('{{ $question }}')"
+                                class="px-4 py-2 rounded-full border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-sm text-zinc-700 dark:text-zinc-300 hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 shadow-sm"
+                            >
+                                {{ $question }}
+                            </button>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
+            {{-- Loading indicator --}}
+            @if($loading)
+                <div class="flex justify-start gap-3">
+                    <div class="flex-shrink-0 flex items-start">
+                        <div class="size-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-md">
+                            <flux:icon.sparkles class="size-4 text-white" />
+                        </div>
+                    </div>
+                    <div class="px-4 py-3 rounded-2xl rounded-tl-sm bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700">
+                        <div class="flex items-center gap-1.5">
+                            <div class="size-2 rounded-full bg-indigo-400 animate-bounce" style="animation-delay: 0ms;"></div>
+                            <div class="size-2 rounded-full bg-indigo-400 animate-bounce" style="animation-delay: 150ms;"></div>
+                            <div class="size-2 rounded-full bg-indigo-400 animate-bounce" style="animation-delay: 300ms;"></div>
+                        </div>
+                    </div>
+                </div>
+            @endif
+        </div>
+
+        {{-- Input Area --}}
+        <div class="border-t border-neutral-200 dark:border-neutral-700 p-4">
+            <form wire:submit="sendMessage" class="flex items-center gap-3">
+                <div class="flex-1">
+                    <flux:input 
+                        wire:model="input" 
+                        placeholder="{{ __('Ask about login events, risk patterns, anomalies...') }}"
+                        icon="chat-bubble-left-ellipsis"
+                        :disabled="$loading"
+                        autocomplete="off"
+                    />
+                </div>
+                <flux:button type="submit" variant="filled" size="base" :disabled="$loading" class="shadow-md shadow-indigo-500/30 whitespace-nowrap">
+                    <flux:icon.paper-airplane class="size-4" />
+                </flux:button>
+            </form>
+        </div>
+    </div>
+</div>

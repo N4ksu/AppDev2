@@ -17,7 +17,15 @@ class LoginLog extends Model
         'login_method', 
         'failed_attempts', 
         'risk_score', 
-        'risk_level'
+        'risk_level',
+        'ai_risk_score',
+        'anomaly_flags',
+        'explanation',
+        'recommended_action',
+    ];
+
+    protected $casts = [
+        'anomaly_flags' => 'array',
     ];
 
     public function user()

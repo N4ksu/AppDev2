@@ -165,6 +165,9 @@ new #[Title('Security Logs')] class extends Component {
                                 {{ __('Security Risk') }}
                             </th>
                             <th class="px-6 py-4 font-bold uppercase tracking-wider text-[11px]">
+                                {{ __('AI Risk') }}
+                            </th>
+                            <th class="px-6 py-4 font-bold uppercase tracking-wider text-[11px]">
                                 {{ $isAdminView ? __('Mitigation Response') : __('System Status') }}
                             </th>
                             <th class="px-6 py-4 font-bold uppercase tracking-wider text-[11px]">
@@ -247,6 +250,41 @@ new #[Title('Security Logs')] class extends Component {
                                         </span>
                                     </div>
                                 </td>
+                                {{-- AI Risk Column --}}
+                                <td class="px-6 py-4">
+                                    @if($log->ai_risk_score !== null)
+                                        @php
+                                            $aiColor = $log->ai_risk_score >= 70 
+                                                ? 'bg-red-100 text-red-700 border-red-300 dark:bg-red-950/50 dark:text-red-400 dark:border-red-800' 
+                                                : ($log->ai_risk_score >= 30 
+                                                    ? 'bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-950/50 dark:text-amber-400 dark:border-amber-800' 
+                                                    : 'bg-emerald-100 text-emerald-700 border-emerald-300 dark:bg-emerald-950/50 dark:text-emerald-400 dark:border-emerald-800');
+                                        @endphp
+                                        <div class="flex flex-col gap-1.5">
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-black uppercase {{ $aiColor }}" title="{{ $log->explanation }}">
+                                                <flux:icon.sparkles class="size-2.5" />
+                                                {{ $log->ai_risk_score }}
+                                                @if($log->recommended_action === 'block')
+                                                    · BLOCK
+                                                @elseif($log->recommended_action === 'step-up')
+                                                    · STEP-UP
+                                                @endif
+                                            </span>
+                                            @if(!empty($log->anomaly_flags) && is_array($log->anomaly_flags))
+                                                <div class="flex flex-wrap gap-1">
+                                                    @foreach(array_slice($log->anomaly_flags, 0, 3) as $flag)
+                                                        <span class="px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-[8px] font-bold text-zinc-500 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 truncate max-w-[100px]">{{ $flag }}</span>
+                                                    @endforeach
+                                                    @if(count($log->anomaly_flags) > 3)
+                                                        <span class="text-[8px] text-zinc-400">+{{ count($log->anomaly_flags) - 3 }}</span>
+                                                    @endif
+                                                </div>
+                                            @endif
+                                        </div>
+                                    @else
+                                        <span class="px-2 py-0.5 rounded-full border text-[10px] font-bold bg-zinc-100 text-zinc-400 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-500 dark:border-zinc-700">N/A</span>
+                                    @endif
+                                </td>
                                 <td class="px-6 py-4 text-xs font-bold font-mono">
                                     @php
                                         $actionTaken = $log->action_taken;
@@ -286,7 +324,7 @@ new #[Title('Security Logs')] class extends Component {
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6"
+                                <td colspan="7"
                                     class="px-6 py-16 text-center text-zinc-500 dark:text-zinc-400 italic font-medium">
                                     {{ __('Zero authentication events recorded matching the current security filters.') }}
                                 </td>

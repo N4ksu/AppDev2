@@ -8,3 +8,5 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 Route::middleware('auth:sanctum')->post('/behavior/verify', [\App\Http\Controllers\BehaviorController::class, 'store']);
+
+Route::middleware('auth:sanctum')->post('/security-chat', \App\Http\Controllers\SecurityChatController::class);

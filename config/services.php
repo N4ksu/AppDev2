@@ -35,4 +35,16 @@ return [
         ],
     ],
 
+    'gemini' => [
+        'api_key'  => env('GEMINI_API_KEY'),
+        'model'    => env('GEMINI_MODEL', 'gemini-2.0-flash-001'),
+        'base_url' => env('GEMINI_BASE_URL', 'https://generativelanguage.googleapis.com/v1beta'),
+    ],
+
+    'groq' => [
+        'api_key'  => env('GROQ_API_KEY'),
+        'model'    => env('GROQ_MODEL', 'llama-3.1-8b-instant'),
+        'base_url' => 'https://api.groq.com/openai/v1',
+    ],
+
 ];

@@ -17,7 +17,7 @@ class RecordSuccessfulLogin
         
         $risk = $riskService->calculateRisk($user, request(), $method, true, $user->email);
 
-        LoginLog::create([
+        $log = LoginLog::create([
             'user_id' => $user->getAuthIdentifier(),
             'email' => $user->email,
             'ip_address' => request()->ip(),
@@ -30,6 +30,9 @@ class RecordSuccessfulLogin
             'risk_level' => $risk['level'],
             'action_taken' => 'allowed',
         ]);
+
+        // Dispatch async AI assessment (non-blocking)
+        \App\Jobs\AssessLoginWithGemini::dispatch($log->id);
 
         if ($user) {
             $user->last_login_ip = request()->ip();

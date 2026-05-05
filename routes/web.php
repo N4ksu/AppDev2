@@ -42,6 +42,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('dashboard');
 
     Route::livewire('security-logs', 'pages::security-logs')->name('security-logs');
+    Route::livewire('security-chat', 'pages::security-chat')->name('security-chat');
+
+    // Web-based Security Chat API (session auth)
+    Route::post('security-chat/send', \App\Http\Controllers\SecurityChatController::class)->name('security-chat.send');
 
     // Centralized Security Actions
     Route::post('security/lock', [SecurityActionController::class, 'lockAccount'])->name('security.lock');

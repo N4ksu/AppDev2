@@ -46,7 +46,7 @@ class RecordFailedLogin
             // Determine status for this log entry
             $status = ($alreadyLocked || $isLockingNow) ? 'locked' : 'failed';
 
-            LoginLog::create([
+            $log = LoginLog::create([
                 'user_id'    => $user->id,
                 'email'      => $user->email,
                 'ip_address' => request()->ip(),
@@ -59,9 +59,12 @@ class RecordFailedLogin
                 'risk_level'   => $risk['level'],
                 'action_taken' => $status === 'locked' ? 'locked' : 'denied',
             ]);
+
+            // Dispatch async AI assessment (non-blocking)
+            \App\Jobs\AssessLoginWithGemini::dispatch($log->id);
         } else {
             // Log failed attempts for non-existent users
-            LoginLog::create([
+            $log = LoginLog::create([
                 'user_id'    => null,
                 'email'      => $submittedEmail,
                 'ip_address' => request()->ip(),
@@ -74,6 +77,9 @@ class RecordFailedLogin
                 'risk_level'   => $risk['level'],
                 'action_taken' => 'denied',
             ]);
+
+            // Dispatch async AI assessment (non-blocking)
+            \App\Jobs\AssessLoginWithGemini::dispatch($log->id);
         }
     }
 }
