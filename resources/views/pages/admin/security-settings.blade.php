@@ -72,4 +72,42 @@ new #[Title('Lock Settings')] class extends Component {
             </div>
         </form>
     </div>
+
+    <div class="relative mt-8 mb-6 w-full">
+        <flux:heading size="xl" level="1">{{ __('AI Services Configuration') }}</flux:heading>
+        <flux:subheading size="lg" class="mb-6">{{ __('Control the activation of AI-powered security features.') }}</flux:subheading>
+        <flux:separator variant="subtle" />
+    </div>
+
+    <div class="max-w-2xl rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-zinc-900">
+        <div class="flex flex-col gap-4">
+            @php
+                $settings = app(\App\Services\SettingsService::class);
+                $chatEnabled = $settings->get('ai_chat_enabled', '1') === '1';
+            @endphp
+
+            <div class="flex items-center justify-between">
+                <div>
+                    <flux:heading size="md">{{ __('AI Security Chat') }}</flux:heading>
+                    <flux:subheading>{{ __('Enable or disable the AI assistant for security analysis.') }}</flux:subheading>
+                </div>
+                
+                <form action="{{ route('admin.toggle-chat') }}" method="POST">
+                    @csrf
+                    <flux:button 
+                        type="submit" 
+                        variant="{{ $chatEnabled ? 'filled' : 'outline' }}" 
+                        color="{{ $chatEnabled ? 'green' : 'zinc' }}"
+                        class="shadow-sm"
+                    >
+                        @if($chatEnabled)
+                            🟢 {{ __('AI Chat ON – Click to Turn OFF') }}
+                        @else
+                            🔴 {{ __('AI Chat OFF – Click to Turn ON') }}
+                        @endif
+                    </flux:button>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>

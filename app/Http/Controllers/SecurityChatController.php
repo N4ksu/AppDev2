@@ -12,6 +12,13 @@ class SecurityChatController extends Controller
 {
     public function __invoke(Request $request, GroqRiskAssessment $groq): JsonResponse
     {
+        $settings = app(\App\Services\SettingsService::class);
+        if ($settings->get('ai_chat_enabled', '1') !== '1') {
+            return response()->json([
+                'reply' => 'AI Chat is currently disabled by the administrator.'
+            ]);
+        }
+
         $request->validate([
             'message' => 'required|string|max:2000',
         ]);

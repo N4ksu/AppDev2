@@ -28,6 +28,15 @@ new #[Title('Security Chat')] class extends Component {
 
     public function sendMessage(?string $question = null): void
     {
+        $settings = app(\App\Services\SettingsService::class);
+        if ($settings->get('ai_chat_enabled', '1') !== '1') {
+            $this->messages[] = [
+                'role' => 'assistant',
+                'content' => 'AI Chat is currently disabled by the administrator.',
+            ];
+            return;
+        }
+
         $message = trim($question ?? $this->input);
         if ($message === '') {
             return;

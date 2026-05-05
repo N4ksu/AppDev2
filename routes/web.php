@@ -52,6 +52,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::livewire('admin/security-settings', 'pages::admin.security-settings')->name('admin.security-settings');
         Route::livewire('admin/account-unlocks', 'pages::admin.account-unlocks')->name('admin.account-unlocks');
         Route::livewire('admin/user-permissions', 'pages::admin.user-permissions')->name('admin.user-permissions');
+        
+        Route::post('/admin/toggle-chat', [\App\Http\Controllers\AdminController::class, 'toggleChat'])->name('admin.toggle-chat');
     });
 
     // Security Chat (Scoped by role internally)
