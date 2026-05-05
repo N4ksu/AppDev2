@@ -57,9 +57,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::livewire('admin/account-unlocks', 'pages::admin.account-unlocks')->name('admin.account-unlocks');
         Route::livewire('admin/user-permissions', 'pages::admin.user-permissions')->name('admin.user-permissions');
     });
+
+    // User Profile & Security Settings (where passkeys are managed)
+    Route::get('profile/security', function() {
+        return view('pages.profile.security-settings');
+    })->name('profile.security');
 });
 
 Route::middleware(['guest'])->group(function () {
+    Route::get('auth/google', [App\Http\Controllers\Auth\GoogleAuthController::class, 'redirectToGoogle'])->name('auth.google');
+    Route::get('auth/google/callback', [App\Http\Controllers\Auth\GoogleAuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');
+
     Route::post('webauthn/login/options', [WebAuthnLoginController::class, 'options']);
     Route::post('webauthn/login', [WebAuthnLoginController::class, 'login'])->name('webauthn.login');
 });

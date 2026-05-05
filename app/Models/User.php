@@ -14,7 +14,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laragear\WebAuthn\Contracts\WebAuthnAuthenticatable;
 use Laragear\WebAuthn\WebAuthnAuthentication;
 
-#[Fillable(['name', 'email', 'password', 'role', 'is_locked', 'locked_until', 'failed_attempts', 'last_login_ip'])]
+#[Fillable(['name', 'email', 'password', 'role', 'is_locked', 'locked_until', 'failed_attempts', 'last_login_ip', 'google_id', 'display_name', 'avatar_url'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable implements WebAuthnAuthenticatable
 {
