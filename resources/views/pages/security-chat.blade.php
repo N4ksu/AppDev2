@@ -215,35 +215,73 @@ new #[Title('Security Chat')] class extends Component {
 
             {{-- Suggested Questions (only if chat is empty) --}}
             @if(count($messages) === 1 && !$loading)
-                <div class="flex flex-col items-center gap-3 py-10">
-                    <p class="text-xs font-medium text-zinc-500 uppercase tracking-widest">{{ __('Try asking...') }}</p>
-                    <div class="flex flex-wrap justify-center gap-2 max-w-2xl">
-                        @php
-                            $isAdmin = auth()->user()->role === 'admin';
-                            $questions = $isAdmin ? [
-                                "Show me high-risk logins today",
-                                "Any logins from new devices recently?",
-                                "Who logged in outside normal working hours?",
-                                "Explain what a risk score means",
-                                "How do I register a passwordless passkey?",
-                                "Show all logins with anomaly flags"
-                            ] : [
+                <div class="flex flex-col items-center gap-6 py-8">
+                    <p class="text-xs font-medium text-zinc-500 uppercase tracking-widest mb-2">{{ __('Try asking...') }}</p>
+                    
+                    @php
+                        $isAdmin = auth()->user()->role === 'admin';
+                        $categorizedQuestions = $isAdmin ? [
+                            'Threat Detection & Anomalies' => [
+                                "Show me all high-risk logins in the last 24 hours",
+                                "List all failed login attempts today with their IP addresses",
+                                "Any logins from new or unrecognized devices this week?",
+                                "Who logged in outside normal working hours (9 AM – 6 PM) recently?",
+                                "Detect any brute-force patterns: multiple failures followed by success",
+                                "Any impossible travel detected? (logins from distant locations in a short time)",
+                            ],
+                            'User & Access Audit' => [
+                                "Show me the most recent activity for user [email]",
+                                "Which users have the most failed login attempts this month?",
+                                "List all users who have never logged in (inactive accounts)",
+                                "Who has admin or privileged access and when did they last log in?",
+                                "Show me logins grouped by authentication method (FaceID, Fingerprint, Google)",
+                            ],
+                            'Risk & Compliance Overview' => [
+                                "Generate a summary of all blocked or high-risk events this week",
+                                "What is the overall system risk trend over the last 7 days?",
+                                "Show me a count of logins per day for the last 30 days",
+                                "Export or summarize all incidents that require immediate action",
+                                "Which IP addresses are flagged most often for suspicious activity?",
+                            ],
+                            'System Help & Guidance' => [
+                                "Explain how the AI risk scoring works",
+                                "What actions should I take on a blocked login attempt?",
+                                "How do I register a passwordless passkey for my account?",
+                                "How do I interpret the anomaly flags in the login logs?",
+                                "What is the difference between 'step-up' and 'block' recommended actions?",
+                            ],
+                        ] : [
+                            'General' => [
                                 "Show my recent logins",
                                 "Were any of my logins high-risk?",
                                 "Explain what a risk score means",
                                 "How do I register a passwordless passkey?",
                                 "What devices have I used recently?",
                                 "Show my latest security alerts"
-                            ];
-                        @endphp
-                        @foreach($questions as $question)
-                            <button 
-                                type="button"
-                                wire:click="sendMessage('{{ $question }}')"
-                                class="px-4 py-2 rounded-full border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-sm text-zinc-700 dark:text-zinc-300 hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 shadow-sm"
-                            >
-                                {{ $question }}
-                            </button>
+                            ]
+                        ];
+                    @endphp
+
+                    <div class="w-full max-w-3xl space-y-6">
+                        @foreach($categorizedQuestions as $category => $questions)
+                            <div class="flex flex-col gap-2">
+                                @if($isAdmin)
+                                    <span class="text-[10px] font-black uppercase tracking-[0.15em] text-zinc-400 dark:text-zinc-500 px-1">
+                                        {{ $category }}
+                                    </span>
+                                @endif
+                                <div class="flex flex-wrap gap-2">
+                                    @foreach($questions as $question)
+                                        <button 
+                                            type="button"
+                                            wire:click="sendMessage('{{ $question }}')"
+                                            class="px-4 py-2 rounded-full border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-sm text-zinc-700 dark:text-zinc-300 hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 shadow-sm text-left"
+                                        >
+                                            {{ $question }}
+                                        </button>
+                                    @endforeach
+                                </div>
+                            </div>
                         @endforeach
                     </div>
                 </div>
