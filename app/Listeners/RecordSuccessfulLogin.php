@@ -25,7 +25,7 @@ class RecordSuccessfulLogin
             'status' => 'success',
             'action' => 'login',
             'login_method' => $method,
-            'failed_attempts' => $user->failed_attempts,
+            'failed_attempts' => $user->failed_attempts ?? 0,
             'risk_score' => $risk['score'],
             'risk_level' => $risk['level'],
             'action_taken' => 'allowed',

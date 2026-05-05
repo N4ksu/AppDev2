@@ -61,50 +61,54 @@ PROMPT;
     /**
      * Send a chat message with login event context and return Groq's reply.
      */
-    public function chat(string $userMessage, string $eventsJson): ?string
+    public function chat(string $userMessage, string $eventsJson, string $role = 'user'): ?string
     {
         if (!$this->apiKey) {
             Log::warning('GroqRiskAssessment: GROQ_API_KEY is not set. Chat unavailable.');
             return null;
         }
 
-        $systemPrompt = <<<'PROMPT'
+        $basePrompt = <<<'PROMPT'
 You are an AI security assistant for a "Secure Login Monitoring System". 
 Your role is twofold:
-1. Analyze recent login events and provide security insights.
+1. Analyze login events and provide security insights.
 2. Answer general questions about the system, its features, and how to use them.
 
 ## Knowledge Base
 The system supports these authentication methods:
-- **Passwordless Passkeys (FIDO2/WebAuthn)**: Users can register a passkey (e.g., fingerprint, face, or device PIN) instead of a password. Registration steps:
-  1. Navigate to "Account Settings" > "Security" > "Passkeys".
-  2. Click "Register New Passkey".
-  3. Authenticate using your device’s biometric or PIN when prompted.
-  4. The passkey is stored securely on your device and can be used for future logins.
-- **FaceID**: Available on iOS devices. Once the user enables it in app settings, they can log in by scanning their face.
-- **Fingerprint**: Available on Android and some Windows devices. Similar setup process in settings.
-- **Adaptive Risk Scoring**: The system analyzes each login attempt using AI and assigns a risk score (0-100). Scores above 70 are flagged for review.
-- **Security Chat**: This chat interface (what you are) allows operators to query login events and get system help.
-
-## Login Event Data
-You will receive a JSON array of the last 20 login events, each with these fields:
-- user, timestamp, biometric_type, device, ip_address, location_city, risk_score, anomaly_flags, explanation, recommended_action.
+- **Passwordless Passkeys (FIDO2/WebAuthn)**: Users can register a passkey (e.g., fingerprint, face, or device PIN).
+- **FaceID/Fingerprint**: Biometric login options.
+- **Adaptive Risk Scoring**: The system assigns a risk score (0-100) to each login.
+- **Google Social Login**: One-click sign-in.
 
 ## Instructions
-- When the user asks a question about the system itself (like "how to register passkeys" or "what does risk score mean"), use the Knowledge Base above to answer concisely.
-- When the user asks about specific login events (e.g., "show me high-risk logins" or "who logged in yesterday"), use the provided login event data.
-- If the question cannot be answered from the Knowledge Base or the event data, say: "I don't have that information. Please contact the system administrator."
-- Keep answers clear, brief, and in a friendly tone.
+- When asked about the system (e.g., "how to register passkeys"), use the Knowledge Base.
+- When asked about login events, use the provided JSON data.
+- Keep answers clear, professional, and well-structured.
+PROMPT;
 
-Format your responses using Markdown for readability:
-- Use **bold** for important terms.
+        $rolePrompt = $role === 'admin' 
+            ? "You are a GLOBAL SECURITY ANALYST. You have access to all system-wide login events. Provide comprehensive analysis for all users and identify global patterns."
+            : "You are a PERSONAL SECURITY ASSISTANT. You have access ONLY to the login events of the current user. Do NOT provide information about any other user. If asked about other users or system statistics, politely state you can only access their own account data.";
+
+        $systemPrompt = $basePrompt . "\n\n" . $rolePrompt . "\n\n" . <<<'PROMPT'
+Format your responses using Markdown for a professional and spacious layout:
+- Use **bold** for important terms and values.
 - Use bullet points or numbered lists when listing items.
 - Use headings (##) for sections when appropriate.
-- Keep code or URLs in backticks.
-Be concise but well-structured.
+- **IMPORTANT**: Use double newlines between paragraphs and sections to ensure proper spacing.
 PROMPT;
 
         try {
+            // Build historical context string
+            $historyJson = \App\Models\ChatMessage::where('user_id', auth()->id())
+                ->latest()
+                ->take(6)
+                ->get()
+                ->reverse()
+                ->map(fn($m) => "[{$m->role}]: {$m->content}")
+                ->implode("\n");
+
             $response = Http::withToken($this->apiKey)
                 ->acceptJson()
                 ->withoutVerifying()
@@ -113,8 +117,9 @@ PROMPT;
                     'model' => $this->model,
                     'messages' => [
                         ['role' => 'system', 'content' => $systemPrompt],
-                        ['role' => 'user', 'content' => "Here are the recent login events: " . substr($eventsJson, 0, 15000)],
-                        ['role' => 'user', 'content' => "User Query: " . $userMessage],
+                        ['role' => 'user', 'content' => "Recent conversation history for context (role-prefixed):\n" . $historyJson],
+                        ['role' => 'user', 'content' => "Recent login events (Scoped to current user context): " . substr($eventsJson, 0, 15000)],
+                        ['role' => 'user', 'content' => "User Current Query: " . $userMessage],
                     ],
                     'temperature' => 0.5,
                 ]);

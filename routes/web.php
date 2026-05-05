@@ -42,10 +42,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('dashboard');
 
     Route::livewire('security-logs', 'pages::security-logs')->name('security-logs');
-    Route::livewire('security-chat', 'pages::security-chat')->name('security-chat');
-
-    // Web-based Security Chat API (session auth)
-    Route::post('security-chat/send', \App\Http\Controllers\SecurityChatController::class)->name('security-chat.send');
 
     // Centralized Security Actions
     Route::post('security/lock', [SecurityActionController::class, 'lockAccount'])->name('security.lock');
@@ -57,6 +53,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::livewire('admin/account-unlocks', 'pages::admin.account-unlocks')->name('admin.account-unlocks');
         Route::livewire('admin/user-permissions', 'pages::admin.user-permissions')->name('admin.user-permissions');
     });
+
+    // Security Chat (Scoped by role internally)
+    Route::livewire('security-chat', 'pages::security-chat')->name('security-chat');
+    Route::post('security-chat/send', \App\Http\Controllers\SecurityChatController::class)->name('security-chat.send');
+    Route::get('api/security-chat/history', [\App\Http\Controllers\SecurityChatController::class, 'history'])->name('security-chat.history');
+    Route::delete('api/security-chat/clear', [\App\Http\Controllers\SecurityChatController::class, 'clear'])->name('security-chat.clear');
 
     // User Profile & Security Settings (where passkeys are managed)
     Route::get('profile/security', function() {

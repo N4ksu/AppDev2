@@ -28,7 +28,7 @@ class GoogleAuthController extends Controller
         try {
             $googleUser = Socialite::driver('google')->user();
         } catch (\Exception $e) {
-            return redirect()->route('login')->with('error', 'Google authentication failed.');
+            return redirect()->route('login')->with('error', 'Google authentication failed: ' . $e->getMessage());
         }
 
         // Find or create the user
@@ -44,6 +44,7 @@ class GoogleAuthController extends Controller
                     'google_id' => $googleUser->getId(),
                     'avatar_url' => $googleUser->getAvatar(),
                     'display_name' => $googleUser->getName(),
+                    'email_verified_at' => now(), // Assume Google emails are verified
                 ]);
                 $user = $userByEmail;
             } else {
@@ -56,6 +57,7 @@ class GoogleAuthController extends Controller
                     'avatar_url' => $googleUser->getAvatar(),
                     'password' => Hash::make(Str::random(16)), // Required field, but users will use Google
                     'role' => 'user', // Default role
+                    'email_verified_at' => now(), // Assume Google emails are verified
                 ]);
             }
         } else {

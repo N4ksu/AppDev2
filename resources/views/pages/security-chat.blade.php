@@ -10,10 +10,20 @@ new #[Title('Security Chat')] class extends Component {
 
     public function mount(): void
     {
-        $this->messages[] = [
-            'role' => 'system',
-            'content' => 'Ask me anything about recent login events (e.g., "Show me all high-risk logins from the last 24 hours" or "Who logged in from a new device today?").',
-        ];
+        // Load history from DB
+        $history = \App\Models\ChatMessage::where('user_id', auth()->id())
+            ->orderBy('created_at', 'asc')
+            ->get(['role', 'content'])
+            ->toArray();
+
+        if (empty($history)) {
+            $this->messages[] = [
+                'role' => 'system',
+                'content' => 'Ask me anything about recent login events (e.g., "Show me all high-risk logins from the last 24 hours" or "Who logged in from a new device today?").',
+            ];
+        } else {
+            $this->messages = $history;
+        }
     }
 
     public function sendMessage(?string $question = null): void
@@ -32,50 +42,105 @@ new #[Title('Security Chat')] class extends Component {
         $this->loading = true;
 
         try {
-            $response = app(\App\Http\Controllers\SecurityChatController::class);
+            $user = auth()->user();
             
+            // 1. Save User Message to DB
+            \App\Models\ChatMessage::create([
+                'user_id' => $user->id,
+                'role' => 'user',
+                'content' => $message,
+            ]);
+
             $groq = app(\App\Services\GroqRiskAssessment::class);
             
-            // Fetch last 20 login events (optimized for token usage)
-            $events = \App\Models\LoginLog::with('user:id,name,email')
-                ->latest()
-                ->take(20)
-                ->get()
+            // 2. Fetch Login Events (Role-Scoped)
+            $isAdmin = $user->role === 'admin';
+            $query = \App\Models\LoginLog::with('user:id,name,email');
+            if (!$isAdmin) {
+                $query->where('user_id', $user->id);
+            }
+
+            $events = $query->latest()->take(20)->get()
                 ->map(fn (\App\Models\LoginLog $log) => [
                     'user' => $log->user?->name ?? $log->email ?? 'unknown',
-                    'email' => $log->email,
                     'timestamp' => $log->created_at?->toIso8601String(),
                     'biometric_type' => $log->login_method,
                     'device' => $log->user_agent,
-                    'ip_address' => $log->ip_address,
                     'status' => $log->status,
                     'risk_score' => $log->ai_risk_score ?? $log->risk_score,
-                    'anomaly_flags' => $log->anomaly_flags ?? [],
-                    'explanation' => $log->explanation ?? '',
-                    'recommended_action' => $log->recommended_action ?? 'allow',
                 ]);
 
-            $eventsJson = json_encode($events, JSON_PRETTY_PRINT);
-            // Trim JSON to avoid context overflow
-            $eventsJson = substr($eventsJson, 0, 15000);
+            $eventsJson = json_encode($events);
             
-            $reply = $groq->chat($message, $eventsJson);
+            // 3. Get AI Reply
+            $reply = $groq->chat($message, $eventsJson, $user->role);
 
-            $this->messages[] = [
-                'role' => 'assistant',
-                'content' => $reply ?? "I'm sorry, the AI security assistant is currently hit by a rate limit or quota issue (429) from Groq. Please check your GROQ_API_KEY.",
-            ];
+            if ($reply) {
+                // 4. Save Assistant Reply to DB
+                \App\Models\ChatMessage::create([
+                    'user_id' => $user->id,
+                    'role' => 'assistant',
+                    'content' => $reply,
+                ]);
+
+                $this->messages[] = [
+                    'role' => 'assistant',
+                    'content' => $reply,
+                ];
+            } else {
+                 $this->messages[] = [
+                    'role' => 'assistant',
+                    'content' => "I'm sorry, the AI security assistant is currently unavailable.",
+                ];
+            }
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('SecurityChat error: ' . $e->getMessage());
             $this->messages[] = [
                 'role' => 'assistant',
-                'content' => 'An error occurred while processing your request. Please try again.',
+                'content' => 'An error occurred while processing your request.',
             ];
         }
 
         $this->loading = false;
     }
+
+    public function clearChat(): void
+    {
+        \App\Models\ChatMessage::where('user_id', auth()->id())->delete();
+        $this->messages = [];
+        $this->mount(); // Reset to system message
+    }
 }; ?>
+
+<style>
+    .chat-prose ul {
+        list-style-type: disc !important;
+        padding-left: 1.5rem !important;
+        margin-top: 0.75rem !important;
+        margin-bottom: 0.75rem !important;
+    }
+    .chat-prose ol {
+        list-style-type: decimal !important;
+        padding-left: 1.5rem !important;
+        margin-top: 0.75rem !important;
+        margin-bottom: 0.75rem !important;
+    }
+    .chat-prose li {
+        margin-bottom: 0.5rem !important;
+        display: list-item !important;
+        padding-left: 0.25rem !important;
+    }
+    .chat-prose p {
+        margin-bottom: 1rem !important;
+        line-height: 1.6 !important;
+    }
+    .chat-prose h1, .chat-prose h2, .chat-prose h3 {
+        margin-top: 1.5rem !important;
+        margin-bottom: 0.75rem !important;
+        font-weight: 700 !important;
+        color: #4f46e5 !important;
+    }
+</style>
 
 <div class="flex flex-col gap-6 w-full max-w-4xl mx-auto">
     {{-- Header --}}
@@ -93,6 +158,12 @@ new #[Title('Security Chat')] class extends Component {
                 </flux:subheading>
             </div>
             <flux:badge size="sm" color="indigo" class="ml-2">AI</flux:badge>
+            <flux:spacer />
+            @if(count($messages) > 1)
+                <flux:button icon="trash" variant="ghost" size="sm" wire:click="clearChat" wire:confirm="Are you sure you want to clear your chat history?">
+                    {{ __('Clear History') }}
+                </flux:button>
+            @endif
         </div>
     </div>
 
@@ -131,8 +202,9 @@ new #[Title('Security Chat')] class extends Component {
                                 <flux:icon.sparkles class="size-4 text-white" />
                             </div>
                         </div>
-                        <div class="max-w-[75%] px-4 py-3 rounded-2xl rounded-tl-sm bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 shadow-sm">
-                            <div class="prose prose-sm dark:prose-invert prose-p:leading-relaxed prose-pre:bg-zinc-900 prose-pre:text-white prose-li:my-0 text-zinc-800 dark:text-zinc-200"
+                        <div class="max-w-[85%] px-5 py-4 rounded-2xl rounded-tl-sm bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 shadow-sm transition-all duration-200">
+                            <div class="chat-prose prose prose-sm dark:prose-invert max-w-none 
+                                        text-zinc-800 dark:text-zinc-200"
                                  x-data="{ content: @js($msg['content']) }"
                                  x-html="window.marked ? window.DOMPurify.sanitize(window.marked.parse(content)) : content">
                             </div>
@@ -146,14 +218,25 @@ new #[Title('Security Chat')] class extends Component {
                 <div class="flex flex-col items-center gap-3 py-10">
                     <p class="text-xs font-medium text-zinc-500 uppercase tracking-widest">{{ __('Try asking...') }}</p>
                     <div class="flex flex-wrap justify-center gap-2 max-w-2xl">
-                        @foreach([
-                            "Show me high-risk logins today",
-                            "Any logins from new devices recently?",
-                            "Who logged in outside normal working hours?",
-                            "Explain what a risk score means",
-                            "How do I register a passwordless passkey?",
-                            "Show all logins with anomaly flags"
-                        ] as $question)
+                        @php
+                            $isAdmin = auth()->user()->role === 'admin';
+                            $questions = $isAdmin ? [
+                                "Show me high-risk logins today",
+                                "Any logins from new devices recently?",
+                                "Who logged in outside normal working hours?",
+                                "Explain what a risk score means",
+                                "How do I register a passwordless passkey?",
+                                "Show all logins with anomaly flags"
+                            ] : [
+                                "Show my recent logins",
+                                "Were any of my logins high-risk?",
+                                "Explain what a risk score means",
+                                "How do I register a passwordless passkey?",
+                                "What devices have I used recently?",
+                                "Show my latest security alerts"
+                            ];
+                        @endphp
+                        @foreach($questions as $question)
                             <button 
                                 type="button"
                                 wire:click="sendMessage('{{ $question }}')"

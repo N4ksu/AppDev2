@@ -20,16 +20,10 @@
                         {{ __('Security Logs') }}
                     </flux:sidebar.item>
 
-                    <flux:sidebar.item icon="chat-bubble-left-right" :href="route('security-chat')" :current="request()->routeIs('security-chat')" wire:navigate>
-                        {{ __('Security Chat') }}
-                        <flux:badge size="sm" color="indigo" class="ml-auto">AI</flux:badge>
-                    </flux:sidebar.item>
-
                     <flux:sidebar.item icon="key" :href="route('profile.security')" :current="request()->routeIs('profile.security')" wire:navigate>
                         {{ __('Login Security') }}
                     </flux:sidebar.item>
                 </flux:sidebar.group>
-
                 @if(auth()->user()->role === 'admin')
                     <flux:sidebar.group :heading="__('Security Administration')" class="mt-4 grid">
                         <flux:sidebar.item icon="wrench-screwdriver" :href="route('admin.security-settings')" :current="request()->routeIs('admin.security-settings')" wire:navigate>
@@ -45,6 +39,11 @@
                         </flux:sidebar.item>
                     </flux:sidebar.group>
                 @endif
+
+                <flux:sidebar.item icon="chat-bubble-left-right" :href="route('security-chat')" :current="request()->routeIs('security-chat')" wire:navigate>
+                    {{ __('Security Chat') }}
+                    <flux:badge size="sm" color="indigo" class="ml-auto">AI</flux:badge>
+                </flux:sidebar.item>
             </flux:sidebar.nav>
 
             <flux:spacer />
